@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Blood Sugar Level Dashboard</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <style>
+    :root { --ink:#123047; --muted:#4d7189; --line:rgba(255,255,255,.68); --surface:rgba(255,255,255,.36); --back:#dff5ff; --good:#117d6a; --alert:#c77b00; --action:#bd4b18; --blue:#176ca5; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif; color:var(--ink); background:radial-gradient(circle at 8% 4%,rgba(255,255,255,.95) 0 4%,transparent 28%),radial-gradient(circle at 92% 0,rgba(147,220,255,.65),transparent 33%),linear-gradient(135deg,#e8f9ff 0%,#c8edfc 48%,#b7e3f5 100%); }
+    header { padding:28px max(20px,calc((100vw - 1280px)/2)); background:rgba(23,108,165,.38); border-bottom:1px solid rgba(255,255,255,.52); color:white; backdrop-filter:blur(18px) saturate(150%); -webkit-backdrop-filter:blur(18px) saturate(150%); }
+    h1 { margin:0; font-size:clamp(1.5rem,3vw,2.25rem); } header p { margin:7px 0 0; opacity:.86; }
+    main { max-width:1280px; margin:0 auto; padding:22px 20px 40px; }
+    .upload { display:grid; grid-template-columns:1fr auto; gap:18px; align-items:center; padding:18px; background:var(--surface); border:1px solid var(--line); border-radius:14px; box-shadow:0 12px 30px rgba(50,117,151,.14); backdrop-filter:blur(18px) saturate(145%); -webkit-backdrop-filter:blur(18px) saturate(145%); }
+    .upload-controls { display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:flex-end; }
+    .sheet-url { width:min(390px,100%); }
+    .upload strong,.upload span { display:block; } .upload span { margin-top:4px; font-size:.9rem; color:var(--muted); }
+    input[type=file] { max-width:100%; }
+    .filters { display:flex; flex-wrap:wrap; gap:14px; align-items:end; padding:18px 0 6px; }
+    label { display:grid; gap:5px; font-size:.84rem; font-weight:650; } input,select,button { font:inherit; }
+    input[type=date],input[type=search],select { height:38px; border:1px solid rgba(255,255,255,.78); border-radius:7px; padding:0 9px; background:rgba(255,255,255,.5); color:var(--ink); backdrop-filter:blur(10px); }
+    button { height:38px; padding:0 14px; border:1px solid rgba(255,255,255,.5); border-radius:7px; cursor:pointer; color:white; background:rgba(23,108,165,.82); box-shadow:0 6px 15px rgba(23,108,165,.18); font-weight:650; }
+    .status-filters { display:flex; gap:10px; flex-wrap:wrap; padding-bottom:8px; font-size:.88rem; }
+    .status-filters label { display:flex; align-items:center; gap:5px; font-weight:500; }
+    .metrics { display:grid; grid-template-columns:repeat(5,minmax(150px,1fr)); gap:14px; margin:14px 0; }
+    .metric { background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:16px; box-shadow:0 10px 24px rgba(50,117,151,.1); backdrop-filter:blur(18px) saturate(145%); -webkit-backdrop-filter:blur(18px) saturate(145%); }
+    .metric small { display:block; color:var(--muted); font-weight:600; } .metric b { display:block; margin-top:5px; font-size:1.5rem; }
+    .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
+    .panel { min-width:0; background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:40px; box-shadow:0 14px 30px rgba(50,117,151,.12),inset 0 1px 0 rgba(255,255,255,.55); backdrop-filter:blur(20px) saturate(150%); -webkit-backdrop-filter:blur(20px) saturate(150%); }
+    .panel.wide { grid-column:1/-1; } .chart { min-height:350px; }
+    .notice { margin:18px 0; padding:14px; border-radius:9px; background:#fff7ed; color:#9a3412; display:none; }
+    .empty { text-align:center; padding:48px 20px; color:var(--muted); background:var(--surface); border:1px dashed rgba(54,125,158,.38); border-radius:12px; backdrop-filter:blur(16px); }
+    .footnote { color:var(--muted); font-size:.8rem; margin:18px 2px 0; }
+    @media (max-width:980px) { .metrics { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+    @media (max-width:760px) { .upload,.grid { grid-template-columns:1fr; } .metrics { grid-template-columns:repeat(2,minmax(0,1fr)); } .panel.wide { grid-column:auto; } .panel { padding:24px; } .chart { min-height:310px; } }
+  </style>
+</head>
+<body>
+  <header><h1>Blood Sugar Level Dashboard</h1><p>Upload a JSON file to explore glucose trends, status, meals, and timing patterns.</p></header>
+  <main>
+    <section class="upload" aria-label="Upload data">
+      <div><strong>Load blood sugar data</strong><span>Upload a JSON file, or paste a public Google Sheets URL. Spreadsheet-style exports with positional keys such as <code>__1</code> are supported.</span></div>
+      <div class="upload-controls">
+        <input id="sheetUrl" class="sheet-url" type="url" value="https://docs.google.com/spreadsheets/d/1XvLpmchyu6Vq11a47xT0IyKWXdi6Bgq9TcijP-jDVeE/edit?gid=421423730#gid=421423730" placeholder="Paste public Google Sheets URL" aria-label="Google Sheets URL">
+        <button id="loadSheet" type="button">Load Google Sheet</button>
+        <input id="fileInput" type="file" accept=".json,application/json" aria-label="Upload JSON file">
+      </div>
+    </section>
+    <div id="notice" class="notice" role="alert"></div>
+    <section id="dashboard" hidden>
+      <div class="filters">
+        <label>From <input id="fromDate" type="date"></label>
+        <label>To <input id="toDate" type="date"></label>
+        <label>Meal contains <input id="mealFilter" type="search" placeholder="e.g. rice"></label>
+        <button id="resetFilters" type="button">Reset filters</button>
+      </div>
+      <div id="statusFilters" class="status-filters" aria-label="Status filters"></div>
+      <section class="metrics" aria-label="Summary metrics">
+        <div class="metric"><small>Readings</small><b id="readingCount">—</b></div>
+        <div class="metric"><small>Average glucose</small><b id="avgGlucose">—</b></div>
+        <div class="metric"><small>Latest glucose</small><b id="latestGlucose">—</b></div>
+        <div class="metric"><small>Range</small><b id="rangeGlucose">—</b></div>
+        <div class="metric"><small>Action required</small><b id="actionRate">—</b></div>
+        <div class="metric"><small>Average HbA1c</small><b id="avgA1c">—</b></div>
+        <div class="metric"><small>Latest HbA1c</small><b id="latestA1c">—</b></div>
+      </section>
+      <section class="grid">
+        <div class="panel wide"><div id="trendChart" class="chart"></div></div>
+        <div class="panel"><div id="statusChart" class="chart"></div></div>
+        <div class="panel"><div id="dailyChart" class="chart"></div></div>
+        <div class="panel"><div id="hba1cChart" class="chart"></div></div>
+        <div class="panel"><div id="mealChart" class="chart"></div></div>
+        <div class="panel"><div id="timingChart" class="chart"></div></div>
+      </section>
+      <p class="footnote">For tracking and discussion with a qualified healthcare professional; dashboard labels and thresholds are not medical advice.</p>
+    </section>
+    <div id="emptyState" class="empty">Choose a JSON file to generate the dashboard.</div>
+  </main>
+  <script>
+    (() => {
+      const COLORS={"Good Sugar Level":"#1b9e77","Be Alert for Sugar Level":"#e69f00","Action Require":"#d55e00","Unclassified":"#64748b"};
+      let rows=[], sourceRows=[], statusSelection=new Set();
+      const $=id=>document.getElementById(id), layout={paper_bgcolor:"#ffffff",plot_bgcolor:"#ffffff",font:{color:"#172033"},margin:{l:58,r:24,t:52,b:54},hoverlabel:{bgcolor:"#172033",font:{color:"#fff"}}};
+      const number=v=>{ const n=parseFloat(String(v??"").replace(/[^0-9.-]/g,"")); return Number.isFinite(n)?n:null; };
+      const text=v=>String(v??"").trim();
+      const normal=s=>text(s).toLowerCase().replace(/[^a-z0-9]/g,"");
+      function fieldMap(header) { const aliases={date:["date"],time:["time"],meal:["mealitem","meal","food"],hours:["afterhoursofmeal","hoursaftermeal","hoursafter","postmealhours"],mgdl:["mgdl","glucosemgdl","bloodsugar"],mmol:["mmoll","mmol","mmolliter"],a1c:["hba1c","hba1cpercent"],status:["status","classification"]}; const map={}; for(const [key,names] of Object.entries(aliases)) map[key]=Object.keys(header).find(k=>names.includes(normal(header[k]))); return map; }
+      function spreadsheetRows(raw) { const headerIndex=raw.findIndex(r=>Object.values(r||{}).some(v=>normal(v)==="mgdl") && Object.values(r||{}).some(v=>normal(v)==="date")); if(headerIndex<0) return raw; const header=raw[headerIndex], map=fieldMap(header); return raw.slice(headerIndex+1).map(r=>Object.fromEntries(Object.entries(map).map(([name,key])=>[name,key===undefined?"":r[key]]))); }
+      function parseDateTime(dateValue,timeValue) { const d=text(dateValue), t=text(timeValue); if(!d) return null; const parsed=new Date(d+(t?" "+t:"")); if(!Number.isNaN(parsed.getTime())) return parsed; const iso=d.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/); if(iso) { const time=t.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i); let h=time?+time[1]:12, m=time?+time[2]:0; if(time&&time[3]) { if(/pm/i.test(time[3])&&h!==12)h+=12; if(/am/i.test(time[3])&&h===12)h=0; } const result=new Date(+iso[1],+iso[2]-1,+iso[3],h,m); return Number.isNaN(result.getTime())?null:result; } return null; }
+      function parseHours(v) { const s=text(v); if(!s) return null; const clock=s.match(/^(\d+):(\d{2})$/); return clock?(+clock[1]+(+clock[2]/60)):number(s); }
+      function loadGoogleSheet(value) { return new Promise((resolve,reject)=>{ let url; try { url=new URL(value); } catch { reject(new Error("Please paste a valid Google Sheets URL.")); return; } const match=url.pathname.match(/\/spreadsheets\/d\/([^/]+)/); if(!match){reject(new Error("Please paste a Google Sheets URL."));return;} const gid=url.searchParams.get('gid')||new URLSearchParams(url.hash.replace(/^#/,'')).get('gid')||'0'; const callback=`bloodSugarSheet_${Date.now()}_${Math.floor(Math.random()*10000)}`; const script=document.createElement('script'); const cleanup=()=>{clearTimeout(timeout);delete window[callback];script.remove();}; const timeout=setTimeout(()=>{cleanup();reject(new Error("Google Sheets did not respond. Make sure the sheet is shared as 'Anyone with the link can view' or published to the web."));},12000); window[callback]=payload=>{cleanup(); if(payload.status==='error'){reject(new Error(payload.errors?.[0]?.detailed_message||"Google Sheets returned an error. Check sharing permissions."));return;} const table=payload.table||{}, cols=table.cols||[]; const header=Object.fromEntries(cols.map((col,i)=>['c'+i,col.label||col.id||''])); const rows=(table.rows||[]).map(row=>Object.fromEntries((row.c||[]).map((cell,i)=>['c'+i,cell?(cell.f??cell.v??''):'']))); const hasNamedHeader=Object.values(header).some(v=>normal(v)==='date')&&Object.values(header).some(v=>normal(v)==='mgdl'); resolve(hasNamedHeader?[header,...rows]:rows); }; script.onerror=()=>{cleanup();reject(new Error("Google Sheets could not be reached. Check your internet connection and sheet sharing settings."));}; script.src=`https://docs.google.com/spreadsheets/d/${match[1]}/gviz/tq?gid=${encodeURIComponent(gid)}&tqx=out:json;responseHandler:${callback}`; document.head.appendChild(script); }); }
+      function classify(mg,status) { if(text(status)) return text(status); if(mg===null) return "Unclassified"; return mg>=300?"Action Require":mg>180?"Be Alert for Sugar Level":"Good Sugar Level"; }
+      function normalize(raw) { const prepared=spreadsheetRows(Array.isArray(raw)?raw:(raw.data||raw.records||[])); const directMap=prepared.length?fieldMap(prepared[0]):{}; return prepared.map(r=>{ const get=(name,fallback)=>r[directMap[name]]??r[name]??r[fallback]??""; const mg=number(get("mgdl","mg/dL")); const dt=parseDateTime(get("date","Date"),get("time","Time")); const mmol=number(get("mmol","mmol/L")); return {dt,mg,mmol: mmol??(mg===null?null:+(mg/18).toFixed(2)),meal:text(get("meal","Meal Item")),hours:parseHours(get("hours","After Hours of meal")),a1c:number(get("a1c","HbA1c (%)")),status:classify(mg,get("status","Status"))}; }).filter(r=>r.dt&&r.mg!==null).sort((a,b)=>a.dt-b.dt); }
+      const dateInput=d=>d.toISOString().slice(0,10), day=d=>d.toLocaleDateString(undefined,{month:"short",day:"numeric"}), color=s=>COLORS[s]||COLORS.Unclassified;
+      function filtered() { const from=$("fromDate").value, to=$("toDate").value, needle=$("mealFilter").value.trim().toLowerCase(); return rows.filter(r=>(!from||dateInput(r.dt)>=from)&&(!to||dateInput(r.dt)<=to)&&(!needle||r.meal.toLowerCase().includes(needle))&&(!statusSelection.size||statusSelection.has(r.status))); }
+      function render() { const data=filtered(); const cfg={responsive:true,displaylogo:false}; if(!data.length){ ["trendChart","statusChart","dailyChart","hba1cChart","mealChart","timingChart"].forEach(id=>Plotly.react(id,[],{...layout,title:"No matching readings",xaxis:{visible:false},yaxis:{visible:false}},cfg)); ["readingCount","avgGlucose","latestGlucose","rangeGlucose","actionRate","avgA1c","latestA1c"].forEach(id=>$(id).textContent="—"); return; }
+        const avg=data.reduce((s,r)=>s+r.mg,0)/data.length, min=Math.min(...data.map(r=>r.mg)), max=Math.max(...data.map(r=>r.mg)), latestGlucose=data[data.length-1].mg, actions=data.filter(r=>/action/i.test(r.status)).length, a1cData=data.filter(r=>r.a1c!==null), avgA1c=a1cData.length?a1cData.reduce((s,r)=>s+r.a1c,0)/a1cData.length:null, latestA1c=a1cData.length?a1cData[a1cData.length-1].a1c:null;
+        $("readingCount").textContent=data.length; $("avgGlucose").textContent=avg.toFixed(0)+" mg/dL"; $("latestGlucose").textContent=latestGlucose+" mg/dL"; $("rangeGlucose").textContent=min+"–"+max+" mg/dL"; $("actionRate").textContent=(100*actions/data.length).toFixed(0)+"%"; $("avgA1c").textContent=avgA1c===null?"—":avgA1c.toFixed(2)+"%"; $("latestA1c").textContent=latestA1c===null?"—":latestA1c.toFixed(2)+"%";
+        const statuses=[...new Set(data.map(r=>r.status))];
+        Plotly.react("trendChart",statuses.map(s=>{const a=data.filter(r=>r.status===s); return {type:"scatter",mode:"lines+markers",name:s,x:a.map(r=>r.dt),y:a.map(r=>r.mg),marker:{color:color(s),size:9},line:{color:color(s),width:2},customdata:a.map(r=>[r.meal,r.hours,r.mmol]),hovertemplate:"%{x|%b %d, %Y %I:%M %p}<br><b>%{y} mg/dL</b><br>%{customdata[2]} mmol/L<br>Meal: %{customdata[0]}<br>Hours after meal: %{customdata[1]}<extra>"+s+"</extra>"};}),{...layout,title:"Glucose trend",xaxis:{title:"Reading time",gridcolor:"#e7edf5"},yaxis:{title:"Glucose (mg/dL)",gridcolor:"#e7edf5",rangemode:"tozero"},shapes:[{type:"line",x0:0,x1:1,xref:"paper",y0:180,y1:180,line:{color:"#e69f00",width:1,dash:"dot"}},{type:"line",x0:0,x1:1,xref:"paper",y0:300,y1:300,line:{color:"#d55e00",width:1,dash:"dot"}}]},cfg);
+        const counts=statuses.map(s=>data.filter(r=>r.status===s).length); Plotly.react("statusChart",[{type:"pie",labels:statuses,values:counts,hole:.58,marker:{colors:statuses.map(color)},textinfo:"label+percent",hovertemplate:"%{label}: %{value} readings (%{percent})<extra></extra>"}],{...layout,title:"Reading status distribution",margin:{l:25,r:25,t:52,b:25},showlegend:false},cfg);
+        const daily={}; data.forEach(r=>{const k=dateInput(r.dt); (daily[k]??=[]).push(r.mg);}); const days=Object.keys(daily); Plotly.react("dailyChart",[{type:"bar",x:days,y:days.map(k=>daily[k].reduce((a,b)=>a+b,0)/daily[k].length),marker:{color:"#2563eb"},hovertemplate:"%{x}<br>Average: %{y:.0f} mg/dL<extra></extra>"}],{...layout,title:"Daily average glucose",xaxis:{title:"Date",tickformat:"%b %d"},yaxis:{title:"Average glucose (mg/dL)",rangemode:"tozero",gridcolor:"#e7edf5"}},cfg);
+        Plotly.react("hba1cChart",a1cData.length?[{type:"scatter",mode:"lines+markers",x:a1cData.map(r=>r.dt),y:a1cData.map(r=>r.a1c),marker:{color:"#7c3aed",size:9},line:{color:"#7c3aed",width:2},customdata:a1cData.map(r=>[r.mg,r.meal]),hovertemplate:"%{x|%b %d, %Y %I:%M %p}<br><b>%{y:.2f}% HbA1c</b><br>Glucose: %{customdata[0]} mg/dL<br>Meal: %{customdata[1]}<extra></extra>"}]:[],{...layout,title:"HbA1c (%) trend",xaxis:{title:"Reading time",gridcolor:"#e7edf5"},yaxis:{title:"HbA1c (%)",gridcolor:"#e7edf5",rangemode:"tozero"},annotations:a1cData.length?[]:[{text:"No HbA1c values in selected data",showarrow:false}]},cfg);
+        const meals={}; data.forEach(r=>{const k=r.meal||"Not recorded"; (meals[k]??=[]).push(r.mg);}); const pairs=Object.entries(meals).map(([meal,values])=>({meal,avg:values.reduce((a,b)=>a+b,0)/values.length,n:values.length})).sort((a,b)=>a.avg-b.avg).slice(-12); Plotly.react("mealChart",[{type:"bar",orientation:"h",y:pairs.map(p=>p.meal),x:pairs.map(p=>p.avg),marker:{color:"#1b9e77"},customdata:pairs.map(p=>p.n),hovertemplate:"%{y}<br>Average: %{x:.0f} mg/dL<br>Readings: %{customdata}<extra></extra>"}],{...layout,title:"Average glucose by meal",margin:{l:150,r:24,t:52,b:54},xaxis:{title:"Average glucose (mg/dL)",rangemode:"tozero",gridcolor:"#e7edf5"},yaxis:{title:"Meal"}},cfg);
+        Plotly.react("timingChart",statuses.map(s=>{const a=data.filter(r=>r.status===s&&r.hours!==null); return {type:"scatter",mode:"markers",name:s,x:a.map(r=>r.hours),y:a.map(r=>r.mg),marker:{color:color(s),size:11,symbol:s==="Good Sugar Level"?"circle":"diamond"},customdata:a.map(r=>[r.dt.toLocaleString(),r.meal]),hovertemplate:"%{customdata[0]}<br><b>%{y} mg/dL</b><br>Meal: %{customdata[1]}<br>Hours after meal: %{x:.1f}<extra>"+s+"</extra>"};}),{...layout,title:"Post-meal timing pattern",xaxis:{title:"Hours after meal",gridcolor:"#e7edf5"},yaxis:{title:"Glucose (mg/dL)",rangemode:"tozero",gridcolor:"#e7edf5"}},cfg);
+      }
+      function buildStatusFilters(){ const statuses=[...new Set(rows.map(r=>r.status))]; statusSelection=new Set(statuses); $("statusFilters").innerHTML=statuses.map((s,i)=>`<label><input type="checkbox" data-status="${s.replace(/&/g,"&amp;").replace(/"/g,"&quot;")}" checked> <span style="color:${color(s)}">●</span> ${s}</label>`).join(""); $("statusFilters").querySelectorAll("input").forEach(box=>box.addEventListener("change",()=>{box.checked?statusSelection.add(box.dataset.status):statusSelection.delete(box.dataset.status);render();})); }
+      function load(raw){ try { rows=normalize(raw); if(!rows.length) throw new Error("No usable readings were found. The JSON needs a date and a numeric mg/dL glucose value."); $("fromDate").value=dateInput(rows[0].dt); $("toDate").value=dateInput(rows[rows.length-1].dt); $("dashboard").hidden=false; $("emptyState").hidden=true; $("notice").style.display="none"; buildStatusFilters(); render(); } catch(e){ $("notice").textContent=e.message; $("notice").style.display="block"; } }
+      $("fileInput").addEventListener("change",e=>{const f=e.target.files[0];if(!f)return;const reader=new FileReader();reader.onload=()=>{try{load(JSON.parse(reader.result));}catch{ $("notice").textContent="That file is not valid JSON."; $("notice").style.display="block"; }};reader.readAsText(f);});
+      $("loadSheet").addEventListener("click",async()=>{ const value=$("sheetUrl").value.trim(); if(!value)return; const button=$("loadSheet"); try { button.disabled=true;button.textContent="Loading…"; load(await loadGoogleSheet(value)); } catch(error) { $("notice").textContent=error.message||"Google Sheets could not be loaded. Ensure the sheet is public or published to the web."; $("notice").style.display="block"; } finally { button.disabled=false;button.textContent="Load Google Sheet"; } });
+      $("loadSheet").click();
+      ["fromDate","toDate","mealFilter"].forEach(id=>$(id).addEventListener(id==="mealFilter"?"input":"change",render));
+      $("resetFilters").addEventListener("click",()=>{if(!rows.length)return; $("fromDate").value=dateInput(rows[0].dt);$("toDate").value=dateInput(rows[rows.length-1].dt);$("mealFilter").value="";statusSelection=new Set(rows.map(r=>r.status));$("statusFilters").querySelectorAll("input").forEach(b=>b.checked=true);render();});
+    })();
+  </script>
+</body>
+</html>

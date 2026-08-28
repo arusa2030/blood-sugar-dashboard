@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Blood Sugar Live Dashboard - First Design</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Blood Sugar Dashboard · Abdur Rashid</title>
   
   <!-- Local Chart.js + CDN Fallback -->
   <script src="chart.umd.min.js"></script>
@@ -49,7 +49,11 @@
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    body {
+    html, body {
+      width: 100%;
+      max-width: 100%;
+      min-height: 100vh;
+      overflow-x: hidden;
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
       background-color: var(--bg-primary);
       background-image: 
@@ -58,49 +62,94 @@
         radial-gradient(circle at 50% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 50%);
       background-attachment: fixed;
       color: var(--text-primary);
-      min-height: 100vh;
-      padding: 24px 28px 60px;
+      -webkit-font-smoothing: antialiased;
     }
 
-    .container { max-width: 1400px; margin: 0 auto; }
+    .container {
+      width: 100%;
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 20px 24px 60px;
+      box-sizing: border-box;
+    }
 
     /* Header */
     header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 16px 24px;
+      padding: 16px 22px;
       background: var(--bg-card);
       border: 1px solid var(--border-color);
       border-radius: 16px;
       backdrop-filter: blur(20px);
-      margin-bottom: 24px;
+      margin-bottom: 20px;
       flex-wrap: wrap;
       gap: 16px;
+      width: 100%;
+      box-sizing: border-box;
     }
 
-    .header-left { display: flex; align-items: center; gap: 14px; }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
     .logo-icon {
       font-size: 2rem;
       background: linear-gradient(135deg, #a855f7, #3b82f6);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+    }
+    .header-title {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .header-title-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
     }
     .header-title h1 {
-      font-size: 1.6rem;
+      font-size: 1.55rem;
       font-weight: 800;
       background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       letter-spacing: -0.02em;
+      line-height: 1.2;
     }
     .header-title p {
-      font-size: 0.85rem;
+      font-size: 0.83rem;
       color: var(--text-secondary);
-      margin-top: 2px;
     }
 
-    .header-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .user-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.25));
+      border: 1px solid rgba(139, 92, 246, 0.45);
+      color: #e0e7ff;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
     .status-badge-live {
       display: inline-flex;
       align-items: center;
@@ -112,6 +161,7 @@
       background: rgba(16, 185, 129, 0.12);
       color: #34d399;
       border: 1px solid rgba(16, 185, 129, 0.25);
+      white-space: nowrap;
     }
     .live-dot {
       width: 7px;
@@ -134,6 +184,7 @@
       align-items: center;
       gap: 6px;
       transition: all 0.2s;
+      white-space: nowrap;
     }
     .btn-action:hover {
       background: rgba(255, 255, 255, 0.12);
@@ -155,15 +206,24 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 16px;
-      padding: 12px 20px;
+      gap: 14px;
+      padding: 12px 18px;
       background: var(--bg-card);
       border: 1px solid var(--border-color);
       border-radius: 14px;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.82rem;
+      color: var(--text-secondary);
       flex-wrap: wrap;
     }
-    .filter-group { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--text-secondary); }
     .filter-pill {
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid var(--border-color);
@@ -174,11 +234,124 @@
       font-weight: 600;
       cursor: pointer;
       transition: all 0.15s;
+      white-space: nowrap;
     }
     .filter-pill:hover, .filter-pill.active {
       background: rgba(99, 102, 241, 0.2);
       border-color: rgba(99, 102, 241, 0.5);
       color: #e0e7ff;
+    }
+
+    /* Date Range Filter & Search Group */
+    .date-search-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      position: relative;
+    }
+
+    .date-picker-wrapper {
+      position: relative;
+    }
+
+    .date-picker-trigger {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .date-picker-trigger:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    .date-picker-trigger .cal-icon { font-size: 0.95rem; }
+    .date-picker-trigger .arrow-down { font-size: 0.75rem; opacity: 0.7; }
+
+    .date-dropdown-card {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      z-index: 100;
+      background: #121826;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: 0 14px 35px rgba(0, 0, 0, 0.7);
+      width: 290px;
+      display: none;
+      backdrop-filter: blur(25px);
+    }
+    .date-dropdown-card.show {
+      display: block;
+      animation: fadeInDropdown 0.15s ease-out;
+    }
+    @keyframes fadeInDropdown {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .preset-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .preset-pill {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 6px 8px;
+      border-radius: 8px;
+      font-size: 0.76rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+    }
+    .preset-pill:hover, .preset-pill.active {
+      background: rgba(99, 102, 241, 0.25);
+      border-color: rgba(99, 102, 241, 0.6);
+      color: #ffffff;
+    }
+
+    .custom-dates-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 10px;
+    }
+    .date-input-field {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .date-input-field label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .date-input-field input[type=date] {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 6px 8px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      outline: none;
+      font-family: inherit;
     }
 
     .search-input {
@@ -189,28 +362,34 @@
       border-radius: 8px;
       font-size: 0.82rem;
       outline: none;
-      width: 220px;
+      width: 240px;
+      box-sizing: border-box;
     }
     .search-input:focus {
       border-color: var(--accent-purple);
     }
 
-    /* 4 Glowing Stat Cards */
+    /* 5 Glowing Stat Cards Grid - Reordered */
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 18px;
-      margin-bottom: 24px;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+      margin-bottom: 20px;
+      width: 100%;
+      box-sizing: border-box;
     }
     .stat-card {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
       border-radius: 16px;
-      padding: 20px 22px;
+      padding: 18px 20px;
       backdrop-filter: blur(20px);
       position: relative;
       overflow: hidden;
       transition: all 0.2s;
+      width: 100%;
+      box-sizing: border-box;
+      min-width: 0;
     }
     .stat-card:hover {
       background: var(--bg-card-hover);
@@ -225,56 +404,66 @@
       right: 0;
       height: 3px;
     }
+    .stat-card.c-amber::before  { background: linear-gradient(90deg, #f59e0b, #ef4444); }
     .stat-card.c-purple::before { background: linear-gradient(90deg, #ec4899, #8b5cf6); }
     .stat-card.c-blue::before   { background: linear-gradient(90deg, #3b82f6, #06b6d4); }
+    .stat-card.c-cyan::before   { background: linear-gradient(90deg, #06b6d4, #10b981); }
     .stat-card.c-green::before  { background: linear-gradient(90deg, #10b981, #34d399); }
-    .stat-card.c-amber::before  { background: linear-gradient(90deg, #f59e0b, #ef4444); }
 
     .stat-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
     .stat-label {
-      font-size: 0.76rem;
+      font-size: 0.74rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.6px;
       color: var(--text-muted);
     }
-    .stat-icon { font-size: 1.3rem; }
+    .stat-icon { font-size: 1.25rem; }
     .stat-value {
-      font-size: 2.2rem;
+      font-size: 2.1rem;
       font-weight: 800;
       color: var(--text-primary);
       letter-spacing: -0.03em;
       line-height: 1.1;
       margin-bottom: 6px;
     }
-    .stat-sub { font-size: 0.8rem; color: var(--text-secondary); }
+    .stat-sub { font-size: 0.78rem; color: var(--text-secondary); }
 
     /* Chart Layouts */
     .grid-2col {
       display: grid;
       grid-template-columns: 2fr 1fr;
       gap: 18px;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
+      width: 100%;
+      box-sizing: border-box;
     }
     .grid-2col-equal {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 18px;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
+      width: 100%;
+      box-sizing: border-box;
     }
 
     .chart-card {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
       border-radius: 16px;
-      padding: 22px;
+      padding: 20px 22px;
       backdrop-filter: blur(20px);
+      width: 100%;
+      box-sizing: border-box;
+      min-width: 0;
     }
     .chart-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 8px;
     }
     .chart-title {
       font-size: 0.95rem;
@@ -286,8 +475,14 @@
     }
     .chart-container {
       position: relative;
-      height: 280px;
+      height: 270px;
       width: 100%;
+      max-width: 100%;
+      min-width: 0;
+    }
+    canvas {
+      max-width: 100% !important;
+      height: auto;
     }
 
     /* History Table */
@@ -295,8 +490,11 @@
       background: var(--bg-card);
       border: 1px solid var(--border-color);
       border-radius: 16px;
-      padding: 22px;
+      padding: 20px 22px;
       backdrop-filter: blur(20px);
+      width: 100%;
+      box-sizing: border-box;
+      min-width: 0;
     }
     .table-header {
       display: flex;
@@ -308,8 +506,15 @@
     }
     .table-title { font-size: 1rem; font-weight: 700; }
     
-    .table-scroll { overflow-x: auto; max-height: 480px; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+    .table-scroll {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: auto;
+      max-height: 480px;
+      -webkit-overflow-scrolling: touch;
+      border-radius: 8px;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.84rem; min-width: 700px; }
     thead th {
       text-align: left;
       padding: 12px 14px;
@@ -319,7 +524,7 @@
       letter-spacing: 0.6px;
       color: var(--text-muted);
       border-bottom: 1px solid var(--border-color);
-      background: rgba(18, 24, 38, 0.9);
+      background: rgba(18, 24, 38, 0.95);
       position: sticky;
       top: 0;
       z-index: 2;
@@ -345,9 +550,108 @@
     .badge-alert  { background: var(--alert-bg); color: var(--alert-text); border: 1px solid var(--alert-border); }
     .badge-danger { background: var(--danger-bg); color: var(--danger-text); border: 1px solid var(--danger-border); }
 
-    @media (max-width: 1024px) {
+    /* Comprehensive Mobile & Responsive Rules */
+    @media (max-width: 1280px) {
+      .stats-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 900px) {
+      .container { padding: 14px; }
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
       .grid-2col, .grid-2col-equal { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .container { padding: 12px; width: 100%; max-width: 100%; }
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 14px 16px;
+        width: 100%;
+      }
+      .header-left {
+        width: 100%;
+      }
+      .header-title-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .header-title h1 {
+        font-size: 1.3rem;
+      }
+      .user-badge {
+        font-size: 0.74rem;
+        padding: 3px 9px;
+      }
+      .header-actions {
+        width: 100%;
+        justify-content: flex-start;
+        gap: 8px;
+      }
+      .filter-strip {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 14px 16px;
+        width: 100%;
+      }
+      .filter-group {
+        width: 100%;
+        justify-content: flex-start;
+      }
+      .date-search-group {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .date-picker-wrapper {
+        width: 100%;
+      }
+      .date-picker-trigger {
+        width: 100%;
+        justify-content: space-between;
+      }
+      .date-dropdown-card {
+        width: 100%;
+        box-sizing: border-box;
+      }
+      .search-input {
+        width: 100% !important;
+      }
+      .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        width: 100%;
+      }
+      .stat-card {
+        padding: 16px 18px;
+        width: 100%;
+      }
+      .stat-value {
+        font-size: 1.9rem;
+      }
+      .stat-label {
+        font-size: 0.72rem;
+      }
+      .stat-sub {
+        font-size: 0.76rem;
+      }
+      .chart-card {
+        padding: 16px 16px;
+        width: 100%;
+      }
+      .chart-container {
+        height: 230px;
+      }
+      .table-card {
+        padding: 16px 16px;
+        width: 100%;
+      }
+    }
+    @media (max-width: 380px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -360,7 +664,11 @@
     <div class="header-left">
       <div class="logo-icon">🩸</div>
       <div class="header-title">
-        <h1>Blood Sugar Dashboard</h1>
+        <div class="header-title-row">
+          <h1>Blood Sugar Dashboard</h1>
+          <!-- User Name Badge right next to the title -->
+          <span class="user-badge">👤 Abdur Rashid</span>
+        </div>
         <p>Personal Glucose & HbA1c Monitoring · Real-Time Google Sheets Database</p>
       </div>
     </div>
@@ -375,30 +683,67 @@
       <button class="btn-action btn-primary" onclick="syncLiveSheet()">
         ⚡ Sync Now
       </button>
-      <button class="btn-action" onclick="window.open('https://docs.google.com/spreadsheets/d/1XvLpmchyu6Vq11a47xT0IyKWXdi6Bgq9TcijP-jDVeE/edit?gid=421423730#gid=421423730', '_blank')">
-        📊 Open Sheet ↗
-      </button>
     </div>
   </header>
 
   <!-- Filter Strip -->
   <div class="filter-strip">
     <div class="filter-group">
-      <span>STATUS:</span>
+      <span style="font-weight:700;font-size:0.75rem;letter-spacing:0.5px;color:var(--text-muted);">STATUS:</span>
       <button class="filter-pill active" onclick="setStatusFilter('all', this)">All</button>
       <button class="filter-pill" onclick="setStatusFilter('good', this)">Good (&lt;140)</button>
       <button class="filter-pill" onclick="setStatusFilter('alert', this)">Alert (140–199)</button>
       <button class="filter-pill" onclick="setStatusFilter('action', this)">High (≥200)</button>
     </div>
 
-    <div class="filter-group">
+    <!-- Date Range Picker (Left of Search) + Search Input (Right) -->
+    <div class="filter-group date-search-group">
+      <!-- 1. Responsive Date Range Filter Component -->
+      <div class="date-picker-wrapper" id="datePickerWrapper">
+        <button class="date-picker-trigger" id="datePickerBtn" onclick="toggleDateDropdown(event)">
+          <span class="cal-icon">📅</span>
+          <span id="dateRangeDisplay">All Time</span>
+          <span class="arrow-down">▾</span>
+        </button>
+        <div class="date-dropdown-card" id="dateDropdownCard">
+          <div class="preset-buttons">
+            <button class="preset-pill active" onclick="setDatePreset('all', this)">All Time</button>
+            <button class="preset-pill" onclick="setDatePreset('7d', this)">Last 7 Days</button>
+            <button class="preset-pill" onclick="setDatePreset('30d', this)">Last 30 Days</button>
+            <button class="preset-pill" onclick="setDatePreset('90d', this)">Last 3 Months</button>
+          </div>
+          <div class="custom-dates-row">
+            <div class="date-input-field">
+              <label>Start Date</label>
+              <input type="date" id="dateStartInput" onchange="onCustomDateSelect()">
+            </div>
+            <div class="date-input-field">
+              <label>End Date</label>
+              <input type="date" id="dateEndInput" onchange="onCustomDateSelect()">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Search Input Component -->
       <input type="search" class="search-input" id="tableSearch" placeholder="🔍 Search meal, date..." oninput="filterData()">
-      <button class="btn-action" style="padding:5px 10px;font-size:0.76rem;" onclick="exportCSV()">📥 Export CSV</button>
     </div>
   </div>
 
-  <!-- 4 Glowing Stat Cards -->
+  <!-- Reordered Summary Metric Cards -->
+  <!-- 1. Latest Reading -> 2. Average Blood Sugar -> 3. Estimated HbA1c -> 4. Latest HbA1c -> 5. Good Level Readings -->
   <section class="stats-grid">
+    <!-- Card 1: Latest Reading (Sequence #1) -->
+    <div class="stat-card c-amber">
+      <div class="stat-top">
+        <span class="stat-label">Latest Reading</span>
+        <span class="stat-icon">📉</span>
+      </div>
+      <div class="stat-value" id="kpi-latest">94 mg/dL</div>
+      <div class="stat-sub" id="kpi-latest-sub">Latest reading controlled</div>
+    </div>
+
+    <!-- Card 2: Average Blood Sugar (Sequence #2) -->
     <div class="stat-card c-purple">
       <div class="stat-top">
         <span class="stat-label">Average Blood Sugar</span>
@@ -408,6 +753,7 @@
       <div class="stat-sub" id="kpi-range">Range: 86 – 366 mg/dL</div>
     </div>
 
+    <!-- Card 3: Estimated HbA1c (Sequence #3) -->
     <div class="stat-card c-blue">
       <div class="stat-top">
         <span class="stat-label">Estimated HbA1c</span>
@@ -417,22 +763,27 @@
       <div class="stat-sub">Estimated 3-month average</div>
     </div>
 
+    <!-- Card 4: Latest HbA1c (Sequence #4) -->
+    <div class="stat-card c-cyan">
+      <div class="stat-top">
+        <span class="stat-label">Latest HbA1c</span>
+        <span class="stat-icon">🔬</span>
+      </div>
+      <div class="stat-value" id="kpi-latest-a1c">4.90%</div>
+      <div class="stat-sub" style="display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;">
+        <span id="kpi-latest-a1c-date">Recorded: Aug 27, 2026</span>
+        <span id="kpi-latest-a1c-badge" class="badge badge-good">✅ Normal (&lt;5.7%)</span>
+      </div>
+    </div>
+
+    <!-- Card 5: Good Level Readings (Sequence #5) -->
     <div class="stat-card c-green">
       <div class="stat-top">
         <span class="stat-label">Good Level Readings</span>
         <span class="stat-icon">✅</span>
       </div>
-      <div class="stat-value" id="kpi-in-range">68%</div>
-      <div class="stat-sub" id="kpi-in-range-sub">21 of 31 readings in-range</div>
-    </div>
-
-    <div class="stat-card c-amber">
-      <div class="stat-top">
-        <span class="stat-label">Latest Reading</span>
-        <span class="stat-icon">📉</span>
-      </div>
-      <div class="stat-value" id="kpi-latest">94 mg/dL</div>
-      <div class="stat-sub" id="kpi-latest-sub">Latest reading controlled</div>
+      <div class="stat-value" id="kpi-in-range">48%</div>
+      <div class="stat-sub" id="kpi-in-range-sub">15 of 31 readings in-range</div>
     </div>
   </section>
 
@@ -472,6 +823,11 @@
     <div class="chart-card">
       <div class="chart-header">
         <div class="chart-title">🔬 HbA1c (%) Trend Over Time</div>
+        <div style="font-size:0.75rem;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <span style="color:#34d399">● &lt;5.7% Good</span>
+          <span style="color:#fbbf24">● 5.7–6.4% Alert</span>
+          <span style="color:#f87171">● ≥6.5% Action</span>
+        </div>
       </div>
       <div class="chart-container">
         <canvas id="a1cChart"></canvas>
@@ -483,7 +839,6 @@
   <section class="table-card">
     <div class="table-header">
       <div class="table-title">📋 Readings History (<span id="recordCount">31</span> entries)</div>
-      <button class="btn-action" onclick="exportCSV()">📥 Download CSV</button>
     </div>
     <div class="table-scroll">
       <table>
@@ -548,6 +903,13 @@ let currentUnit = 'mg/dL';
 let activeFilter = 'all';
 let chartInstances = {};
 
+// Date Range Filter State
+let dateFilterState = {
+  preset: 'all',
+  startDate: null,
+  endDate: null
+};
+
 const num = v => { const n = parseFloat(String(v ?? '').replace(/[^0-9.-]/g, '')); return Number.isFinite(n) ? n : null; };
 const str = v => String(v ?? '').trim();
 
@@ -565,7 +927,7 @@ function processData(raw) {
     const status = str(r['Status'] || (mg >= 200 ? 'Action Require' : mg >= 140 ? 'Be Alert for Sugar Level' : 'Good Sugar Level'));
     const dt = parseDate(r['Date'], r['Time']);
     
-    // Short label for charts e.g. "Thu Aug 06 6AM"
+    // Short label for charts
     const month = dt.toLocaleString('en', { month: 'short' });
     const day = dt.getDate();
     const weekday = dt.toLocaleString('en', { weekday: 'short' });
@@ -637,6 +999,92 @@ function setStatusFilter(status, btn) {
   renderDashboard();
 }
 
+// Date Range Popover & Selection Logic
+function toggleDateDropdown(e) {
+  if (e) e.stopPropagation();
+  const card = document.getElementById('dateDropdownCard');
+  card.classList.toggle('show');
+}
+
+// Close date popover on outside click
+document.addEventListener('click', (e) => {
+  const wrapper = document.getElementById('datePickerWrapper');
+  if (wrapper && !wrapper.contains(e.target)) {
+    const card = document.getElementById('dateDropdownCard');
+    if (card) card.classList.remove('show');
+  }
+});
+
+function setDatePreset(preset, btn) {
+  dateFilterState.preset = preset;
+  document.querySelectorAll('.preset-pill').forEach(p => p.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  const now = records.length ? records[records.length - 1].dt : new Date();
+
+  if (preset === 'all') {
+    dateFilterState.startDate = null;
+    dateFilterState.endDate = null;
+    document.getElementById('dateRangeDisplay').textContent = 'All Time';
+    document.getElementById('dateStartInput').value = '';
+    document.getElementById('dateEndInput').value = '';
+  } else if (preset === '7d') {
+    const start = new Date(now);
+    start.setDate(start.getDate() - 7);
+    dateFilterState.startDate = start;
+    dateFilterState.endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+    document.getElementById('dateRangeDisplay').textContent = 'Last 7 Days';
+    document.getElementById('dateStartInput').value = start.toISOString().slice(0, 10);
+    document.getElementById('dateEndInput').value = now.toISOString().slice(0, 10);
+  } else if (preset === '30d') {
+    const start = new Date(now);
+    start.setDate(start.getDate() - 30);
+    dateFilterState.startDate = start;
+    dateFilterState.endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+    document.getElementById('dateRangeDisplay').textContent = 'Last 30 Days';
+    document.getElementById('dateStartInput').value = start.toISOString().slice(0, 10);
+    document.getElementById('dateEndInput').value = now.toISOString().slice(0, 10);
+  } else if (preset === '90d') {
+    const start = new Date(now);
+    start.setDate(start.getDate() - 90);
+    dateFilterState.startDate = start;
+    dateFilterState.endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+    document.getElementById('dateRangeDisplay').textContent = 'Last 3 Months';
+    document.getElementById('dateStartInput').value = start.toISOString().slice(0, 10);
+    document.getElementById('dateEndInput').value = now.toISOString().slice(0, 10);
+  }
+
+  const card = document.getElementById('dateDropdownCard');
+  if (card) card.classList.remove('show');
+  renderDashboard();
+}
+
+function onCustomDateSelect() {
+  const startVal = document.getElementById('dateStartInput').value;
+  const endVal = document.getElementById('dateEndInput').value;
+
+  if (startVal) dateFilterState.startDate = new Date(startVal + 'T00:00:00');
+  else dateFilterState.startDate = null;
+
+  if (endVal) dateFilterState.endDate = new Date(endVal + 'T23:59:59');
+  else dateFilterState.endDate = null;
+
+  document.querySelectorAll('.preset-pill').forEach(p => p.classList.remove('active'));
+
+  if (startVal && endVal) {
+    const formatD = d => (d.getMonth() + 1).toString().padStart(2, '0') + '/' + d.getDate().toString().padStart(2, '0') + '/' + d.getFullYear();
+    document.getElementById('dateRangeDisplay').textContent = `${formatD(dateFilterState.startDate)} - ${formatD(dateFilterState.endDate)}`;
+  } else if (startVal) {
+    document.getElementById('dateRangeDisplay').textContent = `From ${startVal}`;
+  } else if (endVal) {
+    document.getElementById('dateRangeDisplay').textContent = `To ${endVal}`;
+  } else {
+    document.getElementById('dateRangeDisplay').textContent = 'All Time';
+  }
+
+  renderDashboard();
+}
+
 function filterData() {
   renderDashboard();
 }
@@ -644,35 +1092,86 @@ function filterData() {
 function getFiltered() {
   const q = document.getElementById('tableSearch').value.toLowerCase().trim();
   return records.filter(r => {
+    // 1. Search Query
     const matchesQuery = !q || r.meal.toLowerCase().includes(q) || r.rawDate.toLowerCase().includes(q) || r.status.toLowerCase().includes(q);
     if (!matchesQuery) return false;
 
-    if (activeFilter === 'good') return r.mg < 140;
-    if (activeFilter === 'alert') return r.mg >= 140 && r.mg < 200;
-    if (activeFilter === 'action') return r.mg >= 200;
+    // 2. Status Filter
+    if (activeFilter === 'good' && r.mg >= 140) return false;
+    if (activeFilter === 'alert' && (r.mg < 140 || r.mg >= 200)) return false;
+    if (activeFilter === 'action' && r.mg < 200) return false;
+
+    // 3. Date Range Filter
+    if (dateFilterState.startDate && r.dt < dateFilterState.startDate) return false;
+    if (dateFilterState.endDate && r.dt > dateFilterState.endDate) return false;
+
     return true;
   });
 }
 
 function renderDashboard() {
   const data = getFiltered();
-  if (!data.length) return;
+  if (!data.length) {
+    document.getElementById('recordCount').textContent = '0';
+    document.getElementById('tableBody').innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:24px;">No matching records found for the selected filter and date range.</td></tr>';
+    return;
+  }
 
-  // 1. Stats
+  // 1. Stats Calculations
   const avg = data.reduce((s, r) => s + getVal(r), 0) / data.length;
   const min = Math.min(...data.map(r => getVal(r)));
   const max = Math.max(...data.map(r => getVal(r)));
-  const a1cAvg = data.reduce((s, r) => s + r.a1c, 0) / data.length;
+  const a1cEntries = data.filter(r => r.a1c !== null && !isNaN(r.a1c));
+  const a1cAvg = a1cEntries.length ? a1cEntries.reduce((s, r) => s + r.a1c, 0) / a1cEntries.length : null;
   const latest = data[data.length - 1];
   const inRangeCount = data.filter(r => r.mg < 140).length;
   const inRangePct = Math.round((inRangeCount / data.length) * 100);
 
+  // Card 1: Latest Reading
+  document.getElementById('kpi-latest').textContent = `${getVal(latest)} ${currentUnit}`;
+  const latestIsGood = latest.mg < 140;
+  const latestIsAlert = latest.mg >= 140 && latest.mg < 200;
+  document.getElementById('kpi-latest-sub').textContent = latestIsGood ? 'Latest reading controlled' : latestIsAlert ? 'Latest reading elevated' : 'Action required';
+
+  // Card 2: Average Blood Sugar
   document.getElementById('kpi-avg').textContent = `${currentUnit === 'mg/dL' ? avg.toFixed(0) : avg.toFixed(1)} ${currentUnit}`;
   document.getElementById('kpi-range').textContent = `Range: ${currentUnit === 'mg/dL' ? `${min} – ${max}` : `${min.toFixed(1)} – ${max.toFixed(1)}`} ${currentUnit}`;
-  document.getElementById('kpi-a1c').textContent = `${a1cAvg.toFixed(1)}%`;
+  
+  // Card 3: Estimated HbA1c
+  document.getElementById('kpi-a1c').textContent = a1cAvg !== null ? `${a1cAvg.toFixed(1)}%` : 'N/A';
+  
+  // Card 4: Latest HbA1c
+  if (a1cEntries.length > 0) {
+    const latestA1cObj = a1cEntries[a1cEntries.length - 1];
+    const val = latestA1cObj.a1c;
+    document.getElementById('kpi-latest-a1c').textContent = Number(val).toFixed(2) + '%';
+    
+    // Format timestamp / test date
+    const dStr = latestA1cObj.rawDate ? latestA1cObj.rawDate.replace(/^[A-Za-z]+,\s*/, '') : latestA1cObj.dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    document.getElementById('kpi-latest-a1c-date').textContent = `Recorded: ${dStr}`;
+    
+    // Clinical Range Status Badge
+    const badgeEl = document.getElementById('kpi-latest-a1c-badge');
+    if (val >= 6.5) {
+      badgeEl.className = 'badge badge-danger';
+      badgeEl.textContent = '🚨 Elevated (≥6.5%)';
+    } else if (val >= 5.7) {
+      badgeEl.className = 'badge badge-alert';
+      badgeEl.textContent = '⚠️ Prediabetes (5.7–6.4%)';
+    } else {
+      badgeEl.className = 'badge badge-good';
+      badgeEl.textContent = '✅ Normal (<5.7%)';
+    }
+  } else {
+    document.getElementById('kpi-latest-a1c').textContent = 'N/A';
+    document.getElementById('kpi-latest-a1c-date').textContent = 'No data available';
+    document.getElementById('kpi-latest-a1c-badge').className = 'badge';
+    document.getElementById('kpi-latest-a1c-badge').textContent = 'Pending';
+  }
+
+  // Card 5: Good Level Readings
   document.getElementById('kpi-in-range').textContent = `${inRangePct}%`;
   document.getElementById('kpi-in-range-sub').textContent = `${inRangeCount} of ${data.length} readings in-range`;
-  document.getElementById('kpi-latest').textContent = `${getVal(latest)} ${currentUnit}`;
 
   // 2. Charts
   renderTrendChart(data);
@@ -823,6 +1322,12 @@ function renderA1cChart(data) {
 
   const labels = data.map(r => r.chartLabel);
   const values = data.map(r => r.a1c);
+  const pointColors = data.map(r => {
+    if (r.a1c === null || isNaN(r.a1c)) return '#64748b';
+    if (r.a1c >= 6.5) return '#ef4444'; // Red: Action Required (>= 6.5%)
+    if (r.a1c >= 5.7) return '#f59e0b'; // Yellow: Be Alert (5.7% to 6.4%)
+    return '#10b981'; // Green: Good Sugar Level (<= 5.69% / < 5.7%)
+  });
 
   chartInstances.a1c = new Chart(canvas.getContext('2d'), {
     type: 'line',
@@ -833,9 +1338,20 @@ function renderA1cChart(data) {
         data: values,
         borderColor: '#f59e0b',
         backgroundColor: 'rgba(245, 158, 11, 0.08)',
-        borderWidth: 2,
-        pointBackgroundColor: '#f59e0b',
-        pointRadius: 4,
+        borderWidth: 2.2,
+        segment: {
+          borderColor: ctx => {
+            const val = ctx.p1.parsed.y;
+            if (val >= 6.5) return '#ef4444';
+            if (val >= 5.7) return '#f59e0b';
+            return '#10b981';
+          }
+        },
+        pointBackgroundColor: pointColors,
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 1.5,
+        pointRadius: 5,
+        pointHoverRadius: 8,
         tension: 0.35,
         fill: true
       }]
@@ -843,14 +1359,31 @@ function renderA1cChart(data) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(15, 23, 42, 0.95)',
+          titleColor: '#f8fafc',
+          bodyColor: '#cbd5e1',
+          padding: 10,
+          cornerRadius: 8,
+          callbacks: {
+            label: ctx => {
+              const val = ctx.parsed.y;
+              const status = val >= 6.5 ? '🚨 Action Required (≥6.5%)' : val >= 5.7 ? '⚠️ Be Alert (5.7%–6.4%)' : '✅ Good Sugar Level (≤5.69%)';
+              return `HbA1c: ${val.toFixed(2)}%  [${status}]`;
+            },
+            afterLabel: ctx => `Date: ${data[ctx.dataIndex].rawDate}\nMeal: ${data[ctx.dataIndex].meal}`
+          }
+        }
+      },
       scales: {
         x: { display: false },
         y: {
           min: 4,
           max: 16,
           grid: { color: 'rgba(255, 255, 255, 0.05)' },
-          ticks: { color: '#64748b', font: { size: 10 } }
+          ticks: { color: '#64748b', font: { size: 10 }, callback: v => v + '%' }
         }
       }
     }
@@ -885,23 +1418,6 @@ function renderTable(data) {
       </tr>
     `;
   });
-}
-
-function exportCSV() {
-  const data = getFiltered();
-  let csv = 'Date,Time,Meal,After_Hours,Glucose_mgdL,Glucose_mmolL,HbA1c_pct,Status\n';
-  data.forEach(r => {
-    const a1cVal = (r.a1c !== null && !isNaN(r.a1c)) ? Number(r.a1c).toFixed(2) : '';
-    csv += `"${r.rawDate}","${r.rawTime}","${r.meal.replace(/"/g, '""')}",${r.hours},${r.mg},${r.mmol},${a1cVal},"${r.status}"\n`;
-  });
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `Blood_Sugar_Export_${new Date().toISOString().slice(0,10)}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
 }
 
 // Initial Boot

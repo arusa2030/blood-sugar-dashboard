@@ -1,118 +1,914 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Blood Sugar Level Dashboard</title>
-  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blood Sugar Live Dashboard - First Design</title>
+  
+  <!-- Local Chart.js + CDN Fallback -->
+  <script src="chart.umd.min.js"></script>
+  <script>
+    if (typeof Chart === 'undefined') {
+      document.write('<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"><\/script>');
+    }
+  </script>
+
   <style>
-    :root { --ink:#123047; --muted:#4d7189; --line:rgba(255,255,255,.68); --surface:rgba(255,255,255,.36); --back:#dff5ff; --good:#117d6a; --alert:#c77b00; --action:#bd4b18; --blue:#176ca5; }
-    * { box-sizing:border-box; }
-    body { margin:0; min-height:100vh; font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif; color:var(--ink); background:radial-gradient(circle at 8% 4%,rgba(255,255,255,.95) 0 4%,transparent 28%),radial-gradient(circle at 92% 0,rgba(147,220,255,.65),transparent 33%),linear-gradient(135deg,#e8f9ff 0%,#c8edfc 48%,#b7e3f5 100%); }
-    header { padding:28px max(20px,calc((100vw - 1280px)/2)); background:rgba(23,108,165,.38); border-bottom:1px solid rgba(255,255,255,.52); color:white; backdrop-filter:blur(18px) saturate(150%); -webkit-backdrop-filter:blur(18px) saturate(150%); }
-    h1 { margin:0; font-size:clamp(1.5rem,3vw,2.25rem); } header p { margin:7px 0 0; opacity:.86; }
-    main { max-width:1280px; margin:0 auto; padding:22px 20px 40px; }
-    .upload { display:grid; grid-template-columns:1fr auto; gap:18px; align-items:center; padding:18px; background:var(--surface); border:1px solid var(--line); border-radius:14px; box-shadow:0 12px 30px rgba(50,117,151,.14); backdrop-filter:blur(18px) saturate(145%); -webkit-backdrop-filter:blur(18px) saturate(145%); }
-    .upload-controls { display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:flex-end; }
-    .sheet-url { width:min(390px,100%); }
-    .upload strong,.upload span { display:block; } .upload span { margin-top:4px; font-size:.9rem; color:var(--muted); }
-    input[type=file] { max-width:100%; }
-    .filters { display:flex; flex-wrap:wrap; gap:14px; align-items:end; padding:18px 0 6px; }
-    label { display:grid; gap:5px; font-size:.84rem; font-weight:650; } input,select,button { font:inherit; }
-    input[type=date],input[type=search],select { height:38px; border:1px solid rgba(255,255,255,.78); border-radius:7px; padding:0 9px; background:rgba(255,255,255,.5); color:var(--ink); backdrop-filter:blur(10px); }
-    button { height:38px; padding:0 14px; border:1px solid rgba(255,255,255,.5); border-radius:7px; cursor:pointer; color:white; background:rgba(23,108,165,.82); box-shadow:0 6px 15px rgba(23,108,165,.18); font-weight:650; }
-    .status-filters { display:flex; gap:10px; flex-wrap:wrap; padding-bottom:8px; font-size:.88rem; }
-    .status-filters label { display:flex; align-items:center; gap:5px; font-weight:500; }
-    .metrics { display:grid; grid-template-columns:repeat(5,minmax(150px,1fr)); gap:14px; margin:14px 0; }
-    .metric { background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:16px; box-shadow:0 10px 24px rgba(50,117,151,.1); backdrop-filter:blur(18px) saturate(145%); -webkit-backdrop-filter:blur(18px) saturate(145%); }
-    .metric small { display:block; color:var(--muted); font-weight:600; } .metric b { display:block; margin-top:5px; font-size:1.5rem; }
-    .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
-    .panel { min-width:0; background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:40px; box-shadow:0 14px 30px rgba(50,117,151,.12),inset 0 1px 0 rgba(255,255,255,.55); backdrop-filter:blur(20px) saturate(150%); -webkit-backdrop-filter:blur(20px) saturate(150%); }
-    .panel.wide { grid-column:1/-1; } .chart { min-height:350px; }
-    .notice { margin:18px 0; padding:14px; border-radius:9px; background:#fff7ed; color:#9a3412; display:none; }
-    .empty { text-align:center; padding:48px 20px; color:var(--muted); background:var(--surface); border:1px dashed rgba(54,125,158,.38); border-radius:12px; backdrop-filter:blur(16px); }
-    .footnote { color:var(--muted); font-size:.8rem; margin:18px 2px 0; }
-    @media (max-width:980px) { .metrics { grid-template-columns:repeat(3,minmax(0,1fr)); } }
-    @media (max-width:760px) { .upload,.grid { grid-template-columns:1fr; } .metrics { grid-template-columns:repeat(2,minmax(0,1fr)); } .panel.wide { grid-column:auto; } .panel { padding:24px; } .chart { min-height:310px; } }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+    :root {
+      --bg-primary: #0a0e17;
+      --bg-card: rgba(18, 24, 38, 0.75);
+      --bg-card-hover: rgba(26, 35, 56, 0.85);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-glow: rgba(99, 102, 241, 0.2);
+      
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+
+      --accent-purple: #8b5cf6;
+      --accent-cyan: #06b6d4;
+      --accent-green: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-red: #ef4444;
+      --accent-blue: #3b82f6;
+
+      --good-bg: rgba(16, 185, 129, 0.12);
+      --good-text: #34d399;
+      --good-border: rgba(16, 185, 129, 0.3);
+
+      --alert-bg: rgba(245, 158, 11, 0.12);
+      --alert-text: #fbbf24;
+      --alert-border: rgba(245, 158, 11, 0.3);
+
+      --danger-bg: rgba(239, 68, 68, 0.15);
+      --danger-text: #f87171;
+      --danger-border: rgba(239, 68, 68, 0.35);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-primary);
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 85% 20%, rgba(6, 182, 212, 0.10) 0%, transparent 45%),
+        radial-gradient(circle at 50% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 50%);
+      background-attachment: fixed;
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 24px 28px 60px;
+    }
+
+    .container { max-width: 1400px; margin: 0 auto; }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 24px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      backdrop-filter: blur(20px);
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .header-left { display: flex; align-items: center; gap: 14px; }
+    .logo-icon {
+      font-size: 2rem;
+      background: linear-gradient(135deg, #a855f7, #3b82f6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .header-title h1 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.02em;
+    }
+    .header-title p {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    .header-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .status-badge-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      background: rgba(16, 185, 129, 0.12);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+    }
+
+    .btn-action {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 7px 14px;
+      border-radius: 10px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .btn-action:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-1px);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border: none;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+    }
+
+    /* Filter Strip */
+    .filter-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 12px 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .filter-group { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--text-secondary); }
+    .filter-pill {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .filter-pill:hover, .filter-pill.active {
+      background: rgba(99, 102, 241, 0.2);
+      border-color: rgba(99, 102, 241, 0.5);
+      color: #e0e7ff;
+    }
+
+    .search-input {
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      outline: none;
+      width: 220px;
+    }
+    .search-input:focus {
+      border-color: var(--accent-purple);
+    }
+
+    /* 4 Glowing Stat Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 20px 22px;
+      backdrop-filter: blur(20px);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.2s;
+    }
+    .stat-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-glow);
+      transform: translateY(-2px);
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+    }
+    .stat-card.c-purple::before { background: linear-gradient(90deg, #ec4899, #8b5cf6); }
+    .stat-card.c-blue::before   { background: linear-gradient(90deg, #3b82f6, #06b6d4); }
+    .stat-card.c-green::before  { background: linear-gradient(90deg, #10b981, #34d399); }
+    .stat-card.c-amber::before  { background: linear-gradient(90deg, #f59e0b, #ef4444); }
+
+    .stat-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .stat-label {
+      font-size: 0.76rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+    }
+    .stat-icon { font-size: 1.3rem; }
+    .stat-value {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 6px;
+    }
+    .stat-sub { font-size: 0.8rem; color: var(--text-secondary); }
+
+    /* Chart Layouts */
+    .grid-2col {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+    .grid-2col-equal {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+
+    .chart-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 22px;
+      backdrop-filter: blur(20px);
+    }
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .chart-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .chart-container {
+      position: relative;
+      height: 280px;
+      width: 100%;
+    }
+
+    /* History Table */
+    .table-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 22px;
+      backdrop-filter: blur(20px);
+    }
+    .table-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .table-title { font-size: 1rem; font-weight: 700; }
+    
+    .table-scroll { overflow-x: auto; max-height: 480px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+    thead th {
+      text-align: left;
+      padding: 12px 14px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-color);
+      background: rgba(18, 24, 38, 0.9);
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+    tbody td {
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+    tbody tr:hover { background: rgba(255, 255, 255, 0.03); }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 100px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .badge-good   { background: var(--good-bg); color: var(--good-text); border: 1px solid var(--good-border); }
+    .badge-alert  { background: var(--alert-bg); color: var(--alert-text); border: 1px solid var(--alert-border); }
+    .badge-danger { background: var(--danger-bg); color: var(--danger-text); border: 1px solid var(--danger-border); }
+
+    @media (max-width: 1024px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .grid-2col, .grid-2col-equal { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
-  <header><h1>Blood Sugar Level Dashboard</h1><p>Upload a JSON file to explore glucose trends, status, meals, and timing patterns.</p></header>
-  <main>
-    <section class="upload" aria-label="Upload data">
-      <div><strong>Load blood sugar data</strong><span>Upload a JSON file, or paste a public Google Sheets URL. Spreadsheet-style exports with positional keys such as <code>__1</code> are supported.</span></div>
-      <div class="upload-controls">
-        <input id="sheetUrl" class="sheet-url" type="url" value="https://docs.google.com/spreadsheets/d/1XvLpmchyu6Vq11a47xT0IyKWXdi6Bgq9TcijP-jDVeE/edit?gid=421423730#gid=421423730" placeholder="Paste public Google Sheets URL" aria-label="Google Sheets URL">
-        <button id="loadSheet" type="button">Load Google Sheet</button>
-        <input id="fileInput" type="file" accept=".json,application/json" aria-label="Upload JSON file">
+
+<div class="container">
+
+  <!-- Header -->
+  <header>
+    <div class="header-left">
+      <div class="logo-icon">🩸</div>
+      <div class="header-title">
+        <h1>Blood Sugar Dashboard</h1>
+        <p>Personal Glucose & HbA1c Monitoring · Real-Time Google Sheets Database</p>
       </div>
-    </section>
-    <div id="notice" class="notice" role="alert"></div>
-    <section id="dashboard" hidden>
-      <div class="filters">
-        <label>From <input id="fromDate" type="date"></label>
-        <label>To <input id="toDate" type="date"></label>
-        <label>Meal contains <input id="mealFilter" type="search" placeholder="e.g. rice"></label>
-        <button id="resetFilters" type="button">Reset filters</button>
+    </div>
+    <div class="header-actions">
+      <div class="status-badge-live">
+        <div class="live-dot"></div>
+        <span id="liveStatusText">Live Synced</span>
       </div>
-      <div id="statusFilters" class="status-filters" aria-label="Status filters"></div>
-      <section class="metrics" aria-label="Summary metrics">
-        <div class="metric"><small>Readings</small><b id="readingCount">—</b></div>
-        <div class="metric"><small>Average glucose</small><b id="avgGlucose">—</b></div>
-        <div class="metric"><small>Latest glucose</small><b id="latestGlucose">—</b></div>
-        <div class="metric"><small>Range</small><b id="rangeGlucose">—</b></div>
-        <div class="metric"><small>Action required</small><b id="actionRate">—</b></div>
-        <div class="metric"><small>Average HbA1c</small><b id="avgA1c">—</b></div>
-        <div class="metric"><small>Latest HbA1c</small><b id="latestA1c">—</b></div>
-      </section>
-      <section class="grid">
-        <div class="panel wide"><div id="trendChart" class="chart"></div></div>
-        <div class="panel"><div id="statusChart" class="chart"></div></div>
-        <div class="panel"><div id="dailyChart" class="chart"></div></div>
-        <div class="panel"><div id="hba1cChart" class="chart"></div></div>
-        <div class="panel"><div id="mealChart" class="chart"></div></div>
-        <div class="panel"><div id="timingChart" class="chart"></div></div>
-      </section>
-      <p class="footnote">For tracking and discussion with a qualified healthcare professional; dashboard labels and thresholds are not medical advice.</p>
-    </section>
-    <div id="emptyState" class="empty">Choose a JSON file to generate the dashboard.</div>
-  </main>
-  <script>
-    (() => {
-      const COLORS={"Good Sugar Level":"#1b9e77","Be Alert for Sugar Level":"#e69f00","Action Require":"#d55e00","Unclassified":"#64748b"};
-      let rows=[], sourceRows=[], statusSelection=new Set();
-      const $=id=>document.getElementById(id), layout={paper_bgcolor:"#ffffff",plot_bgcolor:"#ffffff",font:{color:"#172033"},margin:{l:58,r:24,t:52,b:54},hoverlabel:{bgcolor:"#172033",font:{color:"#fff"}}};
-      const number=v=>{ const n=parseFloat(String(v??"").replace(/[^0-9.-]/g,"")); return Number.isFinite(n)?n:null; };
-      const text=v=>String(v??"").trim();
-      const normal=s=>text(s).toLowerCase().replace(/[^a-z0-9]/g,"");
-      function fieldMap(header) { const aliases={date:["date"],time:["time"],meal:["mealitem","meal","food"],hours:["afterhoursofmeal","hoursaftermeal","hoursafter","postmealhours"],mgdl:["mgdl","glucosemgdl","bloodsugar"],mmol:["mmoll","mmol","mmolliter"],a1c:["hba1c","hba1cpercent"],status:["status","classification"]}; const map={}; for(const [key,names] of Object.entries(aliases)) map[key]=Object.keys(header).find(k=>names.includes(normal(header[k]))); return map; }
-      function spreadsheetRows(raw) { const headerIndex=raw.findIndex(r=>Object.values(r||{}).some(v=>normal(v)==="mgdl") && Object.values(r||{}).some(v=>normal(v)==="date")); if(headerIndex<0) return raw; const header=raw[headerIndex], map=fieldMap(header); return raw.slice(headerIndex+1).map(r=>Object.fromEntries(Object.entries(map).map(([name,key])=>[name,key===undefined?"":r[key]]))); }
-      function parseDateTime(dateValue,timeValue) { const d=text(dateValue), t=text(timeValue); if(!d) return null; const parsed=new Date(d+(t?" "+t:"")); if(!Number.isNaN(parsed.getTime())) return parsed; const iso=d.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/); if(iso) { const time=t.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i); let h=time?+time[1]:12, m=time?+time[2]:0; if(time&&time[3]) { if(/pm/i.test(time[3])&&h!==12)h+=12; if(/am/i.test(time[3])&&h===12)h=0; } const result=new Date(+iso[1],+iso[2]-1,+iso[3],h,m); return Number.isNaN(result.getTime())?null:result; } return null; }
-      function parseHours(v) { const s=text(v); if(!s) return null; const clock=s.match(/^(\d+):(\d{2})$/); return clock?(+clock[1]+(+clock[2]/60)):number(s); }
-      function loadGoogleSheet(value) { return new Promise((resolve,reject)=>{ let url; try { url=new URL(value); } catch { reject(new Error("Please paste a valid Google Sheets URL.")); return; } const match=url.pathname.match(/\/spreadsheets\/d\/([^/]+)/); if(!match){reject(new Error("Please paste a Google Sheets URL."));return;} const gid=url.searchParams.get('gid')||new URLSearchParams(url.hash.replace(/^#/,'')).get('gid')||'0'; const callback=`bloodSugarSheet_${Date.now()}_${Math.floor(Math.random()*10000)}`; const script=document.createElement('script'); const cleanup=()=>{clearTimeout(timeout);delete window[callback];script.remove();}; const timeout=setTimeout(()=>{cleanup();reject(new Error("Google Sheets did not respond. Make sure the sheet is shared as 'Anyone with the link can view' or published to the web."));},12000); window[callback]=payload=>{cleanup(); if(payload.status==='error'){reject(new Error(payload.errors?.[0]?.detailed_message||"Google Sheets returned an error. Check sharing permissions."));return;} const table=payload.table||{}, cols=table.cols||[]; const header=Object.fromEntries(cols.map((col,i)=>['c'+i,col.label||col.id||''])); const rows=(table.rows||[]).map(row=>Object.fromEntries((row.c||[]).map((cell,i)=>['c'+i,cell?(cell.f??cell.v??''):'']))); const hasNamedHeader=Object.values(header).some(v=>normal(v)==='date')&&Object.values(header).some(v=>normal(v)==='mgdl'); resolve(hasNamedHeader?[header,...rows]:rows); }; script.onerror=()=>{cleanup();reject(new Error("Google Sheets could not be reached. Check your internet connection and sheet sharing settings."));}; script.src=`https://docs.google.com/spreadsheets/d/${match[1]}/gviz/tq?gid=${encodeURIComponent(gid)}&tqx=out:json;responseHandler:${callback}`; document.head.appendChild(script); }); }
-      function classify(mg,status) { if(text(status)) return text(status); if(mg===null) return "Unclassified"; return mg>=300?"Action Require":mg>180?"Be Alert for Sugar Level":"Good Sugar Level"; }
-      function normalize(raw) { const prepared=spreadsheetRows(Array.isArray(raw)?raw:(raw.data||raw.records||[])); const directMap=prepared.length?fieldMap(prepared[0]):{}; return prepared.map(r=>{ const get=(name,fallback)=>r[directMap[name]]??r[name]??r[fallback]??""; const mg=number(get("mgdl","mg/dL")); const dt=parseDateTime(get("date","Date"),get("time","Time")); const mmol=number(get("mmol","mmol/L")); return {dt,mg,mmol: mmol??(mg===null?null:+(mg/18).toFixed(2)),meal:text(get("meal","Meal Item")),hours:parseHours(get("hours","After Hours of meal")),a1c:number(get("a1c","HbA1c (%)")),status:classify(mg,get("status","Status"))}; }).filter(r=>r.dt&&r.mg!==null).sort((a,b)=>a.dt-b.dt); }
-      const dateInput=d=>d.toISOString().slice(0,10), day=d=>d.toLocaleDateString(undefined,{month:"short",day:"numeric"}), color=s=>COLORS[s]||COLORS.Unclassified;
-      function filtered() { const from=$("fromDate").value, to=$("toDate").value, needle=$("mealFilter").value.trim().toLowerCase(); return rows.filter(r=>(!from||dateInput(r.dt)>=from)&&(!to||dateInput(r.dt)<=to)&&(!needle||r.meal.toLowerCase().includes(needle))&&(!statusSelection.size||statusSelection.has(r.status))); }
-      function render() { const data=filtered(); const cfg={responsive:true,displaylogo:false}; if(!data.length){ ["trendChart","statusChart","dailyChart","hba1cChart","mealChart","timingChart"].forEach(id=>Plotly.react(id,[],{...layout,title:"No matching readings",xaxis:{visible:false},yaxis:{visible:false}},cfg)); ["readingCount","avgGlucose","latestGlucose","rangeGlucose","actionRate","avgA1c","latestA1c"].forEach(id=>$(id).textContent="—"); return; }
-        const avg=data.reduce((s,r)=>s+r.mg,0)/data.length, min=Math.min(...data.map(r=>r.mg)), max=Math.max(...data.map(r=>r.mg)), latestGlucose=data[data.length-1].mg, actions=data.filter(r=>/action/i.test(r.status)).length, a1cData=data.filter(r=>r.a1c!==null), avgA1c=a1cData.length?a1cData.reduce((s,r)=>s+r.a1c,0)/a1cData.length:null, latestA1c=a1cData.length?a1cData[a1cData.length-1].a1c:null;
-        $("readingCount").textContent=data.length; $("avgGlucose").textContent=avg.toFixed(0)+" mg/dL"; $("latestGlucose").textContent=latestGlucose+" mg/dL"; $("rangeGlucose").textContent=min+"–"+max+" mg/dL"; $("actionRate").textContent=(100*actions/data.length).toFixed(0)+"%"; $("avgA1c").textContent=avgA1c===null?"—":avgA1c.toFixed(2)+"%"; $("latestA1c").textContent=latestA1c===null?"—":latestA1c.toFixed(2)+"%";
-        const statuses=[...new Set(data.map(r=>r.status))];
-        Plotly.react("trendChart",statuses.map(s=>{const a=data.filter(r=>r.status===s); return {type:"scatter",mode:"lines+markers",name:s,x:a.map(r=>r.dt),y:a.map(r=>r.mg),marker:{color:color(s),size:9},line:{color:color(s),width:2},customdata:a.map(r=>[r.meal,r.hours,r.mmol]),hovertemplate:"%{x|%b %d, %Y %I:%M %p}<br><b>%{y} mg/dL</b><br>%{customdata[2]} mmol/L<br>Meal: %{customdata[0]}<br>Hours after meal: %{customdata[1]}<extra>"+s+"</extra>"};}),{...layout,title:"Glucose trend",xaxis:{title:"Reading time",gridcolor:"#e7edf5"},yaxis:{title:"Glucose (mg/dL)",gridcolor:"#e7edf5",rangemode:"tozero"},shapes:[{type:"line",x0:0,x1:1,xref:"paper",y0:180,y1:180,line:{color:"#e69f00",width:1,dash:"dot"}},{type:"line",x0:0,x1:1,xref:"paper",y0:300,y1:300,line:{color:"#d55e00",width:1,dash:"dot"}}]},cfg);
-        const counts=statuses.map(s=>data.filter(r=>r.status===s).length); Plotly.react("statusChart",[{type:"pie",labels:statuses,values:counts,hole:.58,marker:{colors:statuses.map(color)},textinfo:"label+percent",hovertemplate:"%{label}: %{value} readings (%{percent})<extra></extra>"}],{...layout,title:"Reading status distribution",margin:{l:25,r:25,t:52,b:25},showlegend:false},cfg);
-        const daily={}; data.forEach(r=>{const k=dateInput(r.dt); (daily[k]??=[]).push(r.mg);}); const days=Object.keys(daily); Plotly.react("dailyChart",[{type:"bar",x:days,y:days.map(k=>daily[k].reduce((a,b)=>a+b,0)/daily[k].length),marker:{color:"#2563eb"},hovertemplate:"%{x}<br>Average: %{y:.0f} mg/dL<extra></extra>"}],{...layout,title:"Daily average glucose",xaxis:{title:"Date",tickformat:"%b %d"},yaxis:{title:"Average glucose (mg/dL)",rangemode:"tozero",gridcolor:"#e7edf5"}},cfg);
-        Plotly.react("hba1cChart",a1cData.length?[{type:"scatter",mode:"lines+markers",x:a1cData.map(r=>r.dt),y:a1cData.map(r=>r.a1c),marker:{color:"#7c3aed",size:9},line:{color:"#7c3aed",width:2},customdata:a1cData.map(r=>[r.mg,r.meal]),hovertemplate:"%{x|%b %d, %Y %I:%M %p}<br><b>%{y:.2f}% HbA1c</b><br>Glucose: %{customdata[0]} mg/dL<br>Meal: %{customdata[1]}<extra></extra>"}]:[],{...layout,title:"HbA1c (%) trend",xaxis:{title:"Reading time",gridcolor:"#e7edf5"},yaxis:{title:"HbA1c (%)",gridcolor:"#e7edf5",rangemode:"tozero"},annotations:a1cData.length?[]:[{text:"No HbA1c values in selected data",showarrow:false}]},cfg);
-        const meals={}; data.forEach(r=>{const k=r.meal||"Not recorded"; (meals[k]??=[]).push(r.mg);}); const pairs=Object.entries(meals).map(([meal,values])=>({meal,avg:values.reduce((a,b)=>a+b,0)/values.length,n:values.length})).sort((a,b)=>a.avg-b.avg).slice(-12); Plotly.react("mealChart",[{type:"bar",orientation:"h",y:pairs.map(p=>p.meal),x:pairs.map(p=>p.avg),marker:{color:"#1b9e77"},customdata:pairs.map(p=>p.n),hovertemplate:"%{y}<br>Average: %{x:.0f} mg/dL<br>Readings: %{customdata}<extra></extra>"}],{...layout,title:"Average glucose by meal",margin:{l:150,r:24,t:52,b:54},xaxis:{title:"Average glucose (mg/dL)",rangemode:"tozero",gridcolor:"#e7edf5"},yaxis:{title:"Meal"}},cfg);
-        Plotly.react("timingChart",statuses.map(s=>{const a=data.filter(r=>r.status===s&&r.hours!==null); return {type:"scatter",mode:"markers",name:s,x:a.map(r=>r.hours),y:a.map(r=>r.mg),marker:{color:color(s),size:11,symbol:s==="Good Sugar Level"?"circle":"diamond"},customdata:a.map(r=>[r.dt.toLocaleString(),r.meal]),hovertemplate:"%{customdata[0]}<br><b>%{y} mg/dL</b><br>Meal: %{customdata[1]}<br>Hours after meal: %{x:.1f}<extra>"+s+"</extra>"};}),{...layout,title:"Post-meal timing pattern",xaxis:{title:"Hours after meal",gridcolor:"#e7edf5"},yaxis:{title:"Glucose (mg/dL)",rangemode:"tozero",gridcolor:"#e7edf5"}},cfg);
+      <button class="btn-action" onclick="toggleUnit()">
+        🔄 Unit: <strong id="unitBtnText">mg/dL</strong>
+      </button>
+      <button class="btn-action btn-primary" onclick="syncLiveSheet()">
+        ⚡ Sync Now
+      </button>
+      <button class="btn-action" onclick="window.open('https://docs.google.com/spreadsheets/d/1XvLpmchyu6Vq11a47xT0IyKWXdi6Bgq9TcijP-jDVeE/edit?gid=421423730#gid=421423730', '_blank')">
+        📊 Open Sheet ↗
+      </button>
+    </div>
+  </header>
+
+  <!-- Filter Strip -->
+  <div class="filter-strip">
+    <div class="filter-group">
+      <span>STATUS:</span>
+      <button class="filter-pill active" onclick="setStatusFilter('all', this)">All</button>
+      <button class="filter-pill" onclick="setStatusFilter('good', this)">Good (&lt;140)</button>
+      <button class="filter-pill" onclick="setStatusFilter('alert', this)">Alert (140–199)</button>
+      <button class="filter-pill" onclick="setStatusFilter('action', this)">High (≥200)</button>
+    </div>
+
+    <div class="filter-group">
+      <input type="search" class="search-input" id="tableSearch" placeholder="🔍 Search meal, date..." oninput="filterData()">
+      <button class="btn-action" style="padding:5px 10px;font-size:0.76rem;" onclick="exportCSV()">📥 Export CSV</button>
+    </div>
+  </div>
+
+  <!-- 4 Glowing Stat Cards -->
+  <section class="stats-grid">
+    <div class="stat-card c-purple">
+      <div class="stat-top">
+        <span class="stat-label">Average Blood Sugar</span>
+        <span class="stat-icon">🩸</span>
+      </div>
+      <div class="stat-value" id="kpi-avg">164 mg/dL</div>
+      <div class="stat-sub" id="kpi-range">Range: 86 – 366 mg/dL</div>
+    </div>
+
+    <div class="stat-card c-blue">
+      <div class="stat-top">
+        <span class="stat-label">Estimated HbA1c</span>
+        <span class="stat-icon">🧪</span>
+      </div>
+      <div class="stat-value" id="kpi-a1c">7.4%</div>
+      <div class="stat-sub">Estimated 3-month average</div>
+    </div>
+
+    <div class="stat-card c-green">
+      <div class="stat-top">
+        <span class="stat-label">Good Level Readings</span>
+        <span class="stat-icon">✅</span>
+      </div>
+      <div class="stat-value" id="kpi-in-range">68%</div>
+      <div class="stat-sub" id="kpi-in-range-sub">21 of 31 readings in-range</div>
+    </div>
+
+    <div class="stat-card c-amber">
+      <div class="stat-top">
+        <span class="stat-label">Latest Reading</span>
+        <span class="stat-icon">📉</span>
+      </div>
+      <div class="stat-value" id="kpi-latest">94 mg/dL</div>
+      <div class="stat-sub" id="kpi-latest-sub">Latest reading controlled</div>
+    </div>
+  </section>
+
+  <!-- Row 1: Trend Line Chart (Wide) + Status Donut Chart -->
+  <div class="grid-2col">
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="chart-title">📈 Blood Sugar Trend (<span class="unit-text">mg/dL</span>)</div>
+        <div style="font-size:0.75rem;color:var(--text-muted);">Target: &lt;140 mg/dL</div>
+      </div>
+      <div class="chart-container">
+        <canvas id="trendChart"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="chart-title">🍩 Status Distribution</div>
+      </div>
+      <div class="chart-container">
+        <canvas id="donutChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 2: Per Reading Bars + HbA1c Trend -->
+  <div class="grid-2col-equal">
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="chart-title">📊 Readings Overview (<span class="unit-text">mg/dL</span>)</div>
+      </div>
+      <div class="chart-container">
+        <canvas id="barChart"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="chart-title">🔬 HbA1c (%) Trend Over Time</div>
+      </div>
+      <div class="chart-container">
+        <canvas id="a1cChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Full History Table -->
+  <section class="table-card">
+    <div class="table-header">
+      <div class="table-title">📋 Readings History (<span id="recordCount">31</span> entries)</div>
+      <button class="btn-action" onclick="exportCSV()">📥 Download CSV</button>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Meal Description</th>
+            <th>After Meal</th>
+            <th id="th-glucose">Glucose (mg/dL)</th>
+            <th>mmol/L</th>
+            <th>HbA1c (%)</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+</div>
+
+<script>
+// Real Master Dataset
+const RAW_DATA = [
+  {"Date":"Thursday, August 06, 2026","Time":"6:36:00 AM","Meal Item":"Rice, Beef, Fish","After Hours of meal":"12:00","mg/dL":"244","mmoi/L":"13.54","HbA1c (%)":"10.13","Status":"Be Alert for Sugar Level"},
+  {"Date":"Thursday, August 06, 2026","Time":"3:28:00 PM","Meal Item":"Rice, Beef, Fish","After Hours of meal":"7:00","mg/dL":"207","mmoi/L":"11.49","HbA1c (%)":"8.84","Status":"Be Alert for Sugar Level"},
+  {"Date":"Thursday, August 06, 2026","Time":"6:15:00 PM","Meal Item":"Rice, Beef, Fish","After Hours of meal":"2:00","mg/dL":"338","mmoi/L":"18.76","HbA1c (%)":"13.40","Status":"Action Require"},
+  {"Date":"Friday, August 07, 2026","Time":"6:31:00 AM","Meal Item":"Rice, Beef, Fish","After Hours of meal":"11:00","mg/dL":"253","mmoi/L":"14.04","HbA1c (%)":"10.44","Status":"Be Alert for Sugar Level"},
+  {"Date":"Friday, August 07, 2026","Time":"6:14:00 AM","Meal Item":"Rice, Beef, Small Fish","After Hours of meal":"2:00","mg/dL":"366","mmoi/L":"20.31","HbA1c (%)":"14.38","Status":"Action Require"},
+  {"Date":"Saturday, August 08, 2026","Time":"6:36:00 AM","Meal Item":"Chicken, Vegitable and Fish","After Hours of meal":"12:00","mg/dL":"236","mmoi/L":"13.10","HbA1c (%)":"9.85","Status":"Be Alert for Sugar Level"},
+  {"Date":"Sunday, August 09, 2026","Time":"8:24:00 PM","Meal Item":"2 Egges, Salmon Fish, Greek Salad","After Hours of meal":"5:00","mg/dL":"192","mmoi/L":"10.66","HbA1c (%)":"8.32","Status":"Be Alert for Sugar Level"},
+  {"Date":"Monday, August 10, 2026","Time":"6:27:00 AM","Meal Item":"Vegitable, Yougart, Tomato","After Hours of meal":"6:00","mg/dL":"228","mmoi/L":"12.65","HbA1c (%)":"9.57","Status":"Be Alert for Sugar Level"},
+  {"Date":"Monday, August 10, 2026","Time":"8:40:00 PM","Meal Item":"2 Egges, Cucamber","After Hours of meal":"11:00","mg/dL":"130","mmoi/L":"7.21","HbA1c (%)":"6.16","Status":"Good Sugar Level"},
+  {"Date":"Tuesday, August 11, 2026","Time":"6:40:00 AM","Meal Item":"Small Fish, Chichen, some rice","After Hours of meal":"9:30","mg/dL":"181","mmoi/L":"10.05","HbA1c (%)":"7.93","Status":"Good Sugar Level"},
+  {"Date":"Tuesday, August 11, 2026","Time":"11:30:00 PM","Meal Item":"Fish, Chicken","After Hours of meal":"6:00","mg/dL":"161","mmoi/L":"8.94","HbA1c (%)":"7.24","Status":"Good Sugar Level"},
+  {"Date":"Wednesday, August 12, 2026","Time":"5:35:00 PM","Meal Item":"Eggs, nuts, Cucanber","After Hours of meal":"9:00","mg/dL":"147","mmoi/L":"8.16","HbA1c (%)":"6.75","Status":"Good Sugar Level"},
+  {"Date":"Thursday, August 13, 2026","Time":"6:00:00 PM","Meal Item":"Vegitable, Chicken,","After Hours of meal":"20:00","mg/dL":"129","mmoi/L":"7.16","HbA1c (%)":"6.12","Status":"Good Sugar Level"},
+  {"Date":"Friday, August 14, 2026","Time":"6:40:00 AM","Meal Item":"Rice, Chicken, Vegitable, Mango","After Hours of meal":"12:30","mg/dL":"196","mmoi/L":"10.88","HbA1c (%)":"8.46","Status":"Be Alert for Sugar Level"},
+  {"Date":"Friday, August 14, 2026","Time":"10:15:00 PM","Meal Item":"Salad, Beans","After Hours of meal":"8:00","mg/dL":"129","mmoi/L":"7.16","HbA1c (%)":"6.12","Status":"Good Sugar Level"},
+  {"Date":"Saturday, August 15, 2026","Time":"6:00:00 AM","Meal Item":"Vegitable, Rice, Fish, Mango","After Hours of meal":"7:00","mg/dL":"203","mmoi/L":"11.27","HbA1c (%)":"8.70","Status":"Be Alert for Sugar Level"},
+  {"Date":"Saturday, August 15, 2026","Time":"4:10:00 PM","Meal Item":"Salad, Chicken","After Hours of meal":"5:00","mg/dL":"126","mmoi/L":"6.99","HbA1c (%)":"6.02","Status":"Good Sugar Level"},
+  {"Date":"Sunday, August 16, 2026","Time":"6:50:00 PM","Meal Item":"2 Egges, Pasta","After Hours of meal":"","mg/dL":"87","mmoi/L":"4.83","HbA1c (%)":"4.66","Status":"Good Sugar Level"},
+  {"Date":"Sunday, August 16, 2026","Time":"10:50:00 PM","Meal Item":"2 Egges, Vegitable,","After Hours of meal":"2:45","mg/dL":"152","mmoi/L":"8.44","HbA1c (%)":"6.92","Status":"Good Sugar Level"},
+  {"Date":"Monday, August 17, 2026","Time":"6:10:00 PM","Meal Item":"Vegitable","After Hours of meal":"5:00","mg/dL":"102","mmoi/L":"5.66","HbA1c (%)":"5.18","Status":"Good Sugar Level"},
+  {"Date":"Tuesday, August 18, 2026","Time":"6:40:00 AM","Meal Item":"Rice, Small Fish, vegitable","After Hours of meal":"","mg/dL":"141","mmoi/L":"7.83","HbA1c (%)":"6.54","Status":"Good Sugar Level"},
+  {"Date":"Tuesday, August 18, 2026","Time":"4:25:00 PM","Meal Item":"Cucamber, Nuts","After Hours of meal":"3:30","mg/dL":"115","mmoi/L":"6.38","HbA1c (%)":"5.63","Status":"Good Sugar Level"},
+  {"Date":"Wednesday, August 19, 2026","Time":"5:30:00 PM","Meal Item":"Vegitable, Fish, Rice","After Hours of meal":"15:00","mg/dL":"119","mmoi/L":"6.60","HbA1c (%)":"5.77","Status":"Good Sugar Level"},
+  {"Date":"Thursday, August 20, 2026","Time":"3:40:00 PM","Meal Item":"Sweet, Rice, Vegitable, Nuts","After Hours of meal":"15:00","mg/dL":"103","mmoi/L":"5.72","HbA1c (%)":"5.22","Status":"Good Sugar Level"},
+  {"Date":"Friday, August 21, 2026","Time":"6:35:00 PM","Meal Item":"Rice, Vegitable, Fish","After Hours of meal":"12:30","mg/dL":"123","mmoi/L":"6.83","HbA1c (%)":"5.91","Status":"Good Sugar Level"},
+  {"Date":"Saturday, August 22, 2026","Time":"9:45:00 PM","Meal Item":"Nuts, Coconut, Chicken","After Hours of meal":"","mg/dL":"86","mmoi/L":"4.77","HbA1c (%)":"4.62","Status":"Good Sugar Level"},
+  {"Date":"Sunday, August 23, 2026","Time":"12:30:00 AM","Meal Item":"Rice, Fish, Vegitable, Meat","After Hours of meal":"2:30","mg/dL":"181","mmoi/L":"10.05","HbA1c (%)":"7.93","Status":"Good Sugar Level"},
+  {"Date":"Sunday, August 23, 2026","Time":"6:30:00 PM","Meal Item":"2 Egges, Nuts","After Hours of meal":"5:00","mg/dL":"108","mmoi/L":"5.99","HbA1c (%)":"5.39","Status":"Good Sugar Level"},
+  {"Date":"Monday, August 24, 2026","Time":"4:30:00 PM","Meal Item":"Eggs, nuts, Cucanber","After Hours of meal":"8:30","mg/dL":"106","mmoi/L":"5.88","HbA1c (%)":"5.32","Status":"Good Sugar Level"},
+  {"Date":"Tuesday, August 25, 2026","Time":"3:25:00 PM","Meal Item":"Matton, Fish, Rice, Dal","After Hours of meal":"10:00","mg/dL":"115","mmoi/L":"6.38","HbA1c (%)":"5.63","Status":"Good Sugar Level"},
+  {"Date":"Thursday, August 27, 2026","Time":"3:50:00 PM","Meal Item":"2 Eggs","After Hours of meal":"8:00","mg/dL":"94","mmoi/L":"5.22","HbA1c (%)":"4.90","Status":"Good Sugar Level"}
+];
+
+let records = [];
+let currentUnit = 'mg/dL';
+let activeFilter = 'all';
+let chartInstances = {};
+
+const num = v => { const n = parseFloat(String(v ?? '').replace(/[^0-9.-]/g, '')); return Number.isFinite(n) ? n : null; };
+const str = v => String(v ?? '').trim();
+
+function parseDate(dStr, tStr) {
+  const d = str(dStr), t = str(tStr);
+  const parsed = new Date(d + (t ? ' ' + t : ''));
+  return isNaN(parsed.getTime()) ? new Date() : parsed;
+}
+
+function processData(raw) {
+  return raw.map((r, i) => {
+    const mg = num(r['mg/dL'] || r['mgdl'] || 120);
+    const mmol = num(r['mmoi/L'] || r['mmol/L']) || +(mg / 18.018).toFixed(2);
+    const a1c = num(r['HbA1c (%)'] || r['hba1c'] || 5.5);
+    const status = str(r['Status'] || (mg >= 200 ? 'Action Require' : mg >= 140 ? 'Be Alert for Sugar Level' : 'Good Sugar Level'));
+    const dt = parseDate(r['Date'], r['Time']);
+    
+    // Short label for charts e.g. "Thu Aug 06 6AM"
+    const month = dt.toLocaleString('en', { month: 'short' });
+    const day = dt.getDate();
+    const weekday = dt.toLocaleString('en', { weekday: 'short' });
+    const timeShort = str(r['Time']).replace(/:00\s*/, ' ');
+    const chartLabel = `${weekday} ${month} ${day} ${timeShort}`;
+
+    return {
+      id: i + 1,
+      dt,
+      chartLabel,
+      rawDate: str(r['Date']),
+      rawTime: str(r['Time']),
+      meal: str(r['Meal Item'] || 'Standard Meal'),
+      hours: str(r['After Hours of meal'] || '-'),
+      mg,
+      mmol,
+      a1c,
+      status
+    };
+  });
+}
+
+// Google Sheets JSONP Receiver
+window.handleGvizData = function(res) {
+  if (!res || !res.table || !res.table.rows) return;
+  try {
+    const rows = res.table.rows.map(row => {
+      const c = row.c || [];
+      return {
+        'Date': c[0] ? (c[0].f || c[0].v || '') : '',
+        'Time': c[1] ? (c[1].f || c[1].v || '') : '',
+        'Meal Item': c[2] ? (c[2].v || '') : '',
+        'After Hours of meal': c[3] ? (c[3].f || c[3].v || '') : '',
+        'mg/dL': c[4] ? (c[4].v || c[4].f || '') : '',
+        'mmoi/L': c[6] ? (c[6].v || c[6].f || '') : '',
+        'HbA1c (%)': c[7] ? (c[7].v || c[7].f || '') : '',
+        'Status': c[8] ? (c[8].v || '') : ''
+      };
+    });
+    records = processData(rows);
+    renderDashboard();
+    document.getElementById('liveStatusText').textContent = 'Live Synced (' + new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) + ')';
+  } catch(e) { console.error(e); }
+};
+
+function syncLiveSheet() {
+  const old = document.getElementById('gviz-script');
+  if (old) old.remove();
+  const s = document.createElement('script');
+  s.id = 'gviz-script';
+  s.src = `https://docs.google.com/spreadsheets/d/1XvLpmchyu6Vq11a47xT0IyKWXdi6Bgq9TcijP-jDVeE/gviz/tq?gid=421423730&tqx=out:json;responseHandler:handleGvizData&t=${Date.now()}`;
+  document.head.appendChild(s);
+}
+
+function toggleUnit() {
+  currentUnit = currentUnit === 'mg/dL' ? 'mmol/L' : 'mg/dL';
+  document.getElementById('unitBtnText').textContent = currentUnit;
+  document.querySelectorAll('.unit-text').forEach(el => el.textContent = currentUnit);
+  document.getElementById('th-glucose').textContent = `Glucose (${currentUnit})`;
+  renderDashboard();
+}
+
+function getVal(r) { return currentUnit === 'mg/dL' ? r.mg : r.mmol; }
+
+function setStatusFilter(status, btn) {
+  activeFilter = status;
+  document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  renderDashboard();
+}
+
+function filterData() {
+  renderDashboard();
+}
+
+function getFiltered() {
+  const q = document.getElementById('tableSearch').value.toLowerCase().trim();
+  return records.filter(r => {
+    const matchesQuery = !q || r.meal.toLowerCase().includes(q) || r.rawDate.toLowerCase().includes(q) || r.status.toLowerCase().includes(q);
+    if (!matchesQuery) return false;
+
+    if (activeFilter === 'good') return r.mg < 140;
+    if (activeFilter === 'alert') return r.mg >= 140 && r.mg < 200;
+    if (activeFilter === 'action') return r.mg >= 200;
+    return true;
+  });
+}
+
+function renderDashboard() {
+  const data = getFiltered();
+  if (!data.length) return;
+
+  // 1. Stats
+  const avg = data.reduce((s, r) => s + getVal(r), 0) / data.length;
+  const min = Math.min(...data.map(r => getVal(r)));
+  const max = Math.max(...data.map(r => getVal(r)));
+  const a1cAvg = data.reduce((s, r) => s + r.a1c, 0) / data.length;
+  const latest = data[data.length - 1];
+  const inRangeCount = data.filter(r => r.mg < 140).length;
+  const inRangePct = Math.round((inRangeCount / data.length) * 100);
+
+  document.getElementById('kpi-avg').textContent = `${currentUnit === 'mg/dL' ? avg.toFixed(0) : avg.toFixed(1)} ${currentUnit}`;
+  document.getElementById('kpi-range').textContent = `Range: ${currentUnit === 'mg/dL' ? `${min} – ${max}` : `${min.toFixed(1)} – ${max.toFixed(1)}`} ${currentUnit}`;
+  document.getElementById('kpi-a1c').textContent = `${a1cAvg.toFixed(1)}%`;
+  document.getElementById('kpi-in-range').textContent = `${inRangePct}%`;
+  document.getElementById('kpi-in-range-sub').textContent = `${inRangeCount} of ${data.length} readings in-range`;
+  document.getElementById('kpi-latest').textContent = `${getVal(latest)} ${currentUnit}`;
+
+  // 2. Charts
+  renderTrendChart(data);
+  renderDonutChart(data);
+  renderBarChart(data);
+  renderA1cChart(data);
+
+  // 3. Table
+  renderTable(data);
+}
+
+// Chart 1: Trend Line Chart
+function renderTrendChart(data) {
+  const canvas = document.getElementById('trendChart');
+  if (!canvas || typeof Chart === 'undefined') return;
+  if (chartInstances.trend) chartInstances.trend.destroy();
+
+  const labels = data.map(r => r.chartLabel);
+  const values = data.map(r => getVal(r));
+  const pointColors = data.map(r => r.mg >= 200 ? '#ef4444' : r.mg >= 140 ? '#f59e0b' : '#10b981');
+
+  chartInstances.trend = new Chart(canvas.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: `Glucose (${currentUnit})`,
+        data: values,
+        borderColor: '#6366f1',
+        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+        borderWidth: 2,
+        pointBackgroundColor: pointColors,
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 1.5,
+        pointRadius: 4.5,
+        pointHoverRadius: 7,
+        tension: 0.35,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(15, 23, 42, 0.95)',
+          titleColor: '#f8fafc',
+          bodyColor: '#cbd5e1',
+          padding: 10,
+          cornerRadius: 8,
+          callbacks: {
+            afterLabel: ctx => `Meal: ${data[ctx.dataIndex].meal}\nPost-Meal: ${data[ctx.dataIndex].hours}h`
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(255, 255, 255, 0.04)' },
+          ticks: { color: '#64748b', font: { size: 10 }, maxRotation: 45 }
+        },
+        y: {
+          grid: { color: 'rgba(255, 255, 255, 0.05)' },
+          ticks: { color: '#64748b', font: { size: 10 } }
+        }
       }
-      function buildStatusFilters(){ const statuses=[...new Set(rows.map(r=>r.status))]; statusSelection=new Set(statuses); $("statusFilters").innerHTML=statuses.map((s,i)=>`<label><input type="checkbox" data-status="${s.replace(/&/g,"&amp;").replace(/"/g,"&quot;")}" checked> <span style="color:${color(s)}">●</span> ${s}</label>`).join(""); $("statusFilters").querySelectorAll("input").forEach(box=>box.addEventListener("change",()=>{box.checked?statusSelection.add(box.dataset.status):statusSelection.delete(box.dataset.status);render();})); }
-      function load(raw){ try { rows=normalize(raw); if(!rows.length) throw new Error("No usable readings were found. The JSON needs a date and a numeric mg/dL glucose value."); $("fromDate").value=dateInput(rows[0].dt); $("toDate").value=dateInput(rows[rows.length-1].dt); $("dashboard").hidden=false; $("emptyState").hidden=true; $("notice").style.display="none"; buildStatusFilters(); render(); } catch(e){ $("notice").textContent=e.message; $("notice").style.display="block"; } }
-      $("fileInput").addEventListener("change",e=>{const f=e.target.files[0];if(!f)return;const reader=new FileReader();reader.onload=()=>{try{load(JSON.parse(reader.result));}catch{ $("notice").textContent="That file is not valid JSON."; $("notice").style.display="block"; }};reader.readAsText(f);});
-      $("loadSheet").addEventListener("click",async()=>{ const value=$("sheetUrl").value.trim(); if(!value)return; const button=$("loadSheet"); try { button.disabled=true;button.textContent="Loading…"; load(await loadGoogleSheet(value)); } catch(error) { $("notice").textContent=error.message||"Google Sheets could not be loaded. Ensure the sheet is public or published to the web."; $("notice").style.display="block"; } finally { button.disabled=false;button.textContent="Load Google Sheet"; } });
-      $("loadSheet").click();
-      ["fromDate","toDate","mealFilter"].forEach(id=>$(id).addEventListener(id==="mealFilter"?"input":"change",render));
-      $("resetFilters").addEventListener("click",()=>{if(!rows.length)return; $("fromDate").value=dateInput(rows[0].dt);$("toDate").value=dateInput(rows[rows.length-1].dt);$("mealFilter").value="";statusSelection=new Set(rows.map(r=>r.status));$("statusFilters").querySelectorAll("input").forEach(b=>b.checked=true);render();});
-    })();
-  </script>
+    }
+  });
+}
+
+// Chart 2: Status Donut Chart
+function renderDonutChart(data) {
+  const canvas = document.getElementById('donutChart');
+  if (!canvas || typeof Chart === 'undefined') return;
+  if (chartInstances.donut) chartInstances.donut.destroy();
+
+  const good = data.filter(r => r.mg < 140).length;
+  const alert = data.filter(r => r.mg >= 140 && r.mg < 200).length;
+  const danger = data.filter(r => r.mg >= 200).length;
+
+  chartInstances.donut = new Chart(canvas.getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Good (<140)', 'Be Alert (140-199)', 'Action Required (≥200)'],
+      datasets: [{
+        data: [good, alert, danger],
+        backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+        borderColor: 'rgba(18, 24, 38, 0.8)',
+        borderWidth: 3,
+        hoverOffset: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '68%',
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { color: '#94a3b8', font: { size: 10, weight: '600' }, padding: 14 }
+        }
+      }
+    }
+  });
+}
+
+// Chart 3: Per Reading Bars
+function renderBarChart(data) {
+  const canvas = document.getElementById('barChart');
+  if (!canvas || typeof Chart === 'undefined') return;
+  if (chartInstances.bar) chartInstances.bar.destroy();
+
+  const labels = data.map(r => r.chartLabel);
+  const values = data.map(r => getVal(r));
+  const barColors = data.map(r => r.mg >= 200 ? 'rgba(239, 68, 68, 0.8)' : r.mg >= 140 ? 'rgba(245, 158, 11, 0.8)' : 'rgba(16, 185, 129, 0.8)');
+
+  chartInstances.bar = new Chart(canvas.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: `Glucose (${currentUnit})`,
+        data: values,
+        backgroundColor: barColors,
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { display: false },
+        y: {
+          grid: { color: 'rgba(255, 255, 255, 0.05)' },
+          ticks: { color: '#64748b', font: { size: 10 } }
+        }
+      }
+    }
+  });
+}
+
+// Chart 4: HbA1c Trend
+function renderA1cChart(data) {
+  const canvas = document.getElementById('a1cChart');
+  if (!canvas || typeof Chart === 'undefined') return;
+  if (chartInstances.a1c) chartInstances.a1c.destroy();
+
+  const labels = data.map(r => r.chartLabel);
+  const values = data.map(r => r.a1c);
+
+  chartInstances.a1c = new Chart(canvas.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'HbA1c (%)',
+        data: values,
+        borderColor: '#f59e0b',
+        backgroundColor: 'rgba(245, 158, 11, 0.08)',
+        borderWidth: 2,
+        pointBackgroundColor: '#f59e0b',
+        pointRadius: 4,
+        tension: 0.35,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { display: false },
+        y: {
+          min: 4,
+          max: 16,
+          grid: { color: 'rgba(255, 255, 255, 0.05)' },
+          ticks: { color: '#64748b', font: { size: 10 } }
+        }
+      }
+    }
+  });
+}
+
+// Table
+function renderTable(data) {
+  const tbody = document.getElementById('tableBody');
+  document.getElementById('recordCount').textContent = data.length;
+  tbody.innerHTML = '';
+
+  data.forEach((r, i) => {
+    const isDanger = r.mg >= 200;
+    const isAlert = r.mg >= 140 && r.mg < 200;
+    const badgeCls = isDanger ? 'badge-danger' : isAlert ? 'badge-alert' : 'badge-good';
+    const icon = isDanger ? '🚨' : isAlert ? '⚠️' : '✅';
+    const val = currentUnit === 'mg/dL' ? r.mg : r.mmol.toFixed(2);
+    const a1cDisplay = (r.a1c !== null && !isNaN(r.a1c)) ? Number(r.a1c).toFixed(2) + '%' : '-';
+
+    tbody.innerHTML += `
+      <tr>
+        <td style="color:var(--text-muted)">${i + 1}</td>
+        <td style="font-weight:600;color:var(--text-primary)">${r.rawDate}</td>
+        <td style="color:var(--text-muted)">${r.rawTime}</td>
+        <td style="font-weight:500">${r.meal}</td>
+        <td>${r.hours}</td>
+        <td style="font-weight:700;color:${isDanger ? '#f87171' : isAlert ? '#fbbf24' : '#34d399'}">${val}</td>
+        <td>${r.mmol.toFixed(2)}</td>
+        <td>${a1cDisplay}</td>
+        <td><span class="badge ${badgeCls}">${icon} ${r.status}</span></td>
+      </tr>
+    `;
+  });
+}
+
+function exportCSV() {
+  const data = getFiltered();
+  let csv = 'Date,Time,Meal,After_Hours,Glucose_mgdL,Glucose_mmolL,HbA1c_pct,Status\n';
+  data.forEach(r => {
+    const a1cVal = (r.a1c !== null && !isNaN(r.a1c)) ? Number(r.a1c).toFixed(2) : '';
+    csv += `"${r.rawDate}","${r.rawTime}","${r.meal.replace(/"/g, '""')}",${r.hours},${r.mg},${r.mmol},${a1cVal},"${r.status}"\n`;
+  });
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Blood_Sugar_Export_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+// Initial Boot
+records = processData(RAW_DATA);
+renderDashboard();
+syncLiveSheet();
+</script>
+
 </body>
 </html>
